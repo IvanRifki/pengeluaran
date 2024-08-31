@@ -37,11 +37,24 @@ class DatabaseHelperPendapatan {
   Future<Database> iniWinDB() async {
     sqfliteFfiInit();
     final databaseFactory = databaseFactoryFfi;
-    return await databaseFactory.openDatabase(inMemoryDatabasePath,
-        options: OpenDatabaseOptions(
-          onCreate: _onCreate,
-          version: _databaseVersion,
-        ));
+    final path = join(Directory.current.path, _databaseName);
+    return await databaseFactory.openDatabase(
+      path,
+      options: OpenDatabaseOptions(
+        onCreate: _onCreate,
+        version: _databaseVersion,
+      ),
+    );
+    // sqfliteFfiInit();
+    // final databaseFactory = databaseFactoryFfi;
+    // final path = join(await getDatabasesPath(), _databaseName);
+    // return await databaseFactory.openDatabase(
+    //   path,
+    //   options: OpenDatabaseOptions(
+    //     onCreate: _onCreate,
+    //     version: _databaseVersion,
+    //   ),
+    // );
   }
 
   Future<Database> _initDatabase() async {

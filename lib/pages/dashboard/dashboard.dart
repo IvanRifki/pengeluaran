@@ -70,27 +70,33 @@ class _DashboardState extends State<Dashboard> {
     totalPendapatanBulanan = 0;
     List<Map<String, dynamic>> dataPendapatan = await dbPendapatan.queryAll();
     _daftarpendapatan = dataPendapatan;
-    for (var i = 0; i < dataPendapatan.length; i++) {
-      var cekRpPendapatan =
-          dataPendapatan[i]['nominal'].toString().contains('Rp ') == true
-              ? dataPendapatan[i]['nominal'].toString().replaceAll('Rp ', '')
-              : dataPendapatan[i]['nominal'].toString().contains('Rp') == true
-                  ? dataPendapatan[i]['nominal'].toString().replaceAll('Rp', '')
-                  : dataPendapatan[i]['nominal'];
+    if (dataPendapatan.isEmpty) {
+      totalPendapatanBulanan = 0;
+    } else {
+      for (var i = 0; i < dataPendapatan.length; i++) {
+        var cekRpPendapatan = dataPendapatan[i]['nominal']
+                    .toString()
+                    .contains('Rp ') ==
+                true
+            ? dataPendapatan[i]['nominal'].toString().replaceAll('Rp ', '')
+            : dataPendapatan[i]['nominal'].toString().contains('Rp') == true
+                ? dataPendapatan[i]['nominal'].toString().replaceAll('Rp', '')
+                : dataPendapatan[i]['nominal'];
 
-      var Pendapatannya = int.parse(cekRpPendapatan);
-      // totalPendapatanBulanan = totalPendapatanBulanan + Pendapatannya;
+        var Pendapatannya = int.parse(cekRpPendapatan);
+        // totalPendapatanBulanan = totalPendapatanBulanan + Pendapatannya;
 
-      DateTime waktuPendapatan =
-          DateFormat('EEEE dd MMMM yyyy').parse(dataPendapatan[i]['waktu']);
+        DateTime waktuPendapatan =
+            DateFormat('EEEE dd MMMM yyyy').parse(dataPendapatan[i]['waktu']);
 
-      var bulanIni = DateFormat('MMMM').format(DateTime.now());
-      var waktuPendapatannya = DateFormat('MMMM').format(waktuPendapatan);
+        var bulanIni = DateFormat('MMMM').format(DateTime.now());
+        var waktuPendapatannya = DateFormat('MMMM').format(waktuPendapatan);
 
-      if (waktuPendapatannya == bulanIni) {
-        setState(() {
-          totalPendapatanBulanan = totalPendapatanBulanan + Pendapatannya;
-        });
+        if (waktuPendapatannya == bulanIni) {
+          setState(() {
+            totalPendapatanBulanan = totalPendapatanBulanan + Pendapatannya;
+          });
+        }
       }
     }
   }
