@@ -13,6 +13,7 @@ import 'package:pengeluaran/pages/daftarpengeluaran/daftarpengeluaran.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pengeluaran.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pendapatan.dart';
 import 'package:pengeluaran/static/static.dart';
+import 'package:pengeluaran/widgets/mywidget.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -188,6 +189,7 @@ class _DashboardState extends State<Dashboard> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
+          height: 220,
           color: Colors.transparent,
           child: Center(
             child: PieChartTipePengeluaran(),
@@ -203,35 +205,11 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  void showAndCloseDialog(title, content) async {
+  void showAndCloseAlertDialog(title, content) async {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.green[500],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          title: Text(title),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(content),
-            ],
-          ),
-          titleTextStyle: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-          contentTextStyle: const TextStyle(
-            color: Colors.white,
-          ),
-          icon: const Icon(
-            Icons.check_circle,
-            color: Colors.white,
-          ),
-        );
+        return showAndCloseDialog(title, content);
       },
     );
 
@@ -526,13 +504,10 @@ class _DashboardState extends State<Dashboard> {
                         nominalPendapatanController.text,
                         waktuPendapatanController.text,
                       );
-                      // setState(() {
-                      // });
-
                       Navigator.of(context).pop();
                       if (mounted) {
-                        showAndCloseDialog(
-                            'Berhasil', 'Pendapatan Berhasil Tersimpan!');
+                        showAndCloseAlertDialog(
+                            'Berhasil', 'Pendapatan Berhasil Disimpan!');
                       }
                     }
                   },
@@ -645,8 +620,7 @@ class _DashboardState extends State<Dashboard> {
                 ),
                 Container(
                     padding: const EdgeInsets.all(defaultPadding),
-                    width:
-                        MediaQuery.of(context).size.width - defaultPadding * 2,
+                    width: MediaQuery.of(context).size.width - defaultPadding,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       color: Colors.grey[850],
@@ -655,7 +629,7 @@ class _DashboardState extends State<Dashboard> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Row(
-                          mainAxisSize: MainAxisSize.min,
+                          mainAxisSize: MainAxisSize.max,
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Row(
