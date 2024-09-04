@@ -144,7 +144,7 @@ class _PieChartTipePengeluaranState extends State<PieChartTipePengeluaran> {
     num totalnominal = data.fold(0, (sum, item) => sum + item['nominal']);
 
     pieChartData = data.map((item) {
-      final nominal = item['nominal'] / 2;
+      final nominal = item['nominal'];
       final percent = nominal * 100.0 / (totalnominal / 2);
       return PieChartData(item['tipe'], nominal, percent);
     }).toList();

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 
-Widget showAndCloseDialog(title, content) {
+Widget showAndCloseAlertDialog(title, content) {
   return AlertDialog(
     backgroundColor: Colors.green[500],
     shape: RoundedRectangleBorder(

@@ -22,6 +22,9 @@ class Dashboard extends StatefulWidget {
   State<Dashboard> createState() => _DashboardState();
 }
 
+var totalPengeluaranBulanan = 0;
+var totalPendapatanBulanan = 0;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id', '');
@@ -35,9 +38,6 @@ DateTime? selectedDate;
 List<Map<String, dynamic>> _daftarpengeluaran = [];
 List<Map<String, dynamic>> _daftarpendapatan = [];
 
-var totalPengeluaranBulanan = 0;
-var totalPendapatanBulanan = 0;
-
 final namaPendapatanController = TextEditingController();
 final nominalPendapatanController = TextEditingController();
 final waktuPendapatanController = TextEditingController();
@@ -47,6 +47,8 @@ final _formKey = GlobalKey<FormState>();
 class _DashboardState extends State<Dashboard> {
   @override
   void initState() {
+    totalPengeluaranBulanan = 0;
+    totalPendapatanBulanan = 0;
     setState(() {
       getPengeluaran();
       getPendapatan();
@@ -55,9 +57,15 @@ class _DashboardState extends State<Dashboard> {
   }
 
   void loadulang() {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => const Dashboard(),
-    ));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const Dashboard(),
+      ),
+    );
+    setState(() {
+      getPengeluaran();
+      getPendapatan();
+    });
   }
 
   NumberFormat currencyFormatter = NumberFormat.currency(
@@ -175,7 +183,8 @@ class _DashboardState extends State<Dashboard> {
               : dataPengeluaran[i]['nominal'];
 
       var Pengeluarannya = int.parse(cekRp);
-
+      print('ini pengeluarannya $Pengeluarannya');
+      print('ini pengeluarannya total $totalPengeluaranBulanan');
       totalPengeluaranBulanan = totalPengeluaranBulanan + Pengeluarannya;
     }
 
@@ -195,23 +204,27 @@ class _DashboardState extends State<Dashboard> {
             child: PieChartTipePengeluaran(),
           ),
         ),
-        Container(
-          color: Colors.transparent,
-          child: Center(
-            child: LineChartPengeluaranPerBulan(),
-          ),
-        ),
+        totalPengeluaranBulanan != 0
+            ? Container(
+                color: Colors.transparent,
+                child: Center(
+                  child: LineChartPengeluaranPerBulan(),
+                ),
+              )
+            : SizedBox(),
       ],
     );
   }
 
-  void showAndCloseAlertDialog(title, content) async {
+  showAndCloseDialog(title, content) async {
     showDialog(
       context: context,
       builder: (context) {
-        return showAndCloseDialog(title, content);
+        return showAndCloseAlertDialog(title, content);
       },
-    );
+    ).then((value) {
+      setState(() {});
+    });
 
     if (mounted) {
       await Future.delayed(const Duration(seconds: 1));
@@ -506,7 +519,7 @@ class _DashboardState extends State<Dashboard> {
                       );
                       Navigator.of(context).pop();
                       if (mounted) {
-                        showAndCloseAlertDialog(
+                        showAndCloseDialog(
                             'Berhasil', 'Pendapatan Berhasil Disimpan!');
                       }
                     }
@@ -585,9 +598,11 @@ class _DashboardState extends State<Dashboard> {
                               backgroundColor: Colors.red),
                           onPressed: () async {
                             Navigator.of(context).pop();
-                            await dbPendapatan.delete(idnya).then((value) {
-                              loadulang();
-                            });
+                            await dbPendapatan.delete(idnya)
+                                // .then((value) {
+                                //   loadulang();
+                                // })
+                                ;
                             showAndCloseDialog(
                                 'Berhasil', 'Pendapatan Berhasil Terhapus!');
                           },
@@ -721,28 +736,38 @@ class _DashboardState extends State<Dashboard> {
                                                 icon: Icon(Icons.home_rounded,
                                                     color: Colors.white)),
                                             TextButton.icon(
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          const Daftarpengeluaran(),
-                                                    ),
-                                                  ).then((value) {
+                                              onPressed: () {
+                                                Navigator.of(context).pop();
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const Daftarpengeluaran(),
+                                                  ),
+                                                ).then(
+                                                  (value) {
                                                     if (mounted) {
                                                       loadulang();
+                                                      setState(() {});
                                                     }
-                                                  });
-                                                },
-                                                label: Text(
-                                                  'Daftar Pengeluaran',
-                                                  style: TextStyle(
-                                                      color: Colors.white),
-                                                ),
-                                                icon: Icon(
-                                                    Icons.menu_book_rounded,
-                                                    color: Colors.white)),
+                                                  },
+                                                );
+                                                // .then((value) {
+                                                //   if (mounted) {
+                                                //     loadulang();
+                                                //   }
+                                                // })
+                                                ;
+                                              },
+                                              label: Text(
+                                                'Daftar Pengeluaran',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              icon: Icon(
+                                                  Icons.menu_book_rounded,
+                                                  color: Colors.white),
+                                            ),
                                             TextButton.icon(
                                                 onPressed: () {
                                                   Navigator.of(context).pop();
@@ -865,7 +890,7 @@ class _DashboardState extends State<Dashboard> {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Pengeluaran',
+                                Text('Pengeluaran ',
                                     style: TextStyle(color: Colors.grey)),
                                 totalPengeluaranBulanan == 0
                                     ? Row(
@@ -881,12 +906,16 @@ class _DashboardState extends State<Dashboard> {
                                                   .clear();
                                               namaPendapatanController.clear();
                                               waktuPendapatanController.clear();
-                                              // ShowDialogTambahPendapatan();
-                                              Navigator.of(context).push(
+                                              Navigator.push(
+                                                context,
                                                 MaterialPageRoute(
                                                   builder: (context) =>
                                                       const Daftarpengeluaran(),
                                                 ),
+                                              ).then(
+                                                (value) {
+                                                  setState(() {});
+                                                },
                                               );
                                             },
                                           ),

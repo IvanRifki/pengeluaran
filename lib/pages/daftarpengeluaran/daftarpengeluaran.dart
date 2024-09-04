@@ -7,6 +7,7 @@ import 'package:pengeluaran/charts/pieChartTipePengeluaran.dart';
 import 'package:pengeluaran/static/static.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pengeluaran.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:pengeluaran/widgets/mywidget.dart';
 import 'package:sqflite/sqflite.dart';
 
 Future<void> main() async {
@@ -46,8 +47,8 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
     'Transportasi'
   ];
 
-  final KeyboardVisibilityController _keyboardVisibilityController =
-      KeyboardVisibilityController();
+  // final KeyboardVisibilityController _keyboardVisibilityController =
+  //     KeyboardVisibilityController();
 
   var totalPengeluaran = 0;
   var PengeluaranBulanan = 0;
@@ -218,31 +219,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.green[500],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          title: Text(title),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(content),
-            ],
-          ),
-          titleTextStyle: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-          contentTextStyle: const TextStyle(
-            color: Colors.white,
-          ),
-          icon: const Icon(
-            Icons.check_circle,
-            color: Colors.white,
-          ),
-        );
+        return showAndCloseAlertDialog(title, content);
       },
     );
 
