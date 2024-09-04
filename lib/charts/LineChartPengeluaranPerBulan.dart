@@ -55,7 +55,8 @@ class _LineChartPengeluaranPerBulanState
   }
 
   Future<void> getChartData() async {
-    final data = await db.queryLineChartPengeluaran();
+    final bulanini = DateFormat('MMMM').format(DateTime.now());
+    final data = await db.queryLineChartPengeluaran(bulanini);
     _chartdata.clear();
 
     if (data.isNotEmpty) {

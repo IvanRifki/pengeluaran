@@ -119,10 +119,10 @@ class DatabaseHelper {
     return results;
   }
 
-  Future<List<Map<String, dynamic>>> queryLineChartPengeluaran() async {
+  Future<List<Map<String, dynamic>>> queryLineChartPengeluaran(bulan) async {
     final db = await DatabaseHelper.instance.database;
     final List<Map<String, dynamic>> results = await db.rawQuery(
-        'Select SUM(CAST(REPLACE($columnNominal, "Rp ", "") AS INTEGER)) as TotalPengeluaran, $columnWaktu FROM $table WHERE $columnWaktu LIKE "%August%" group by $columnWaktu ');
+        'Select SUM(CAST(REPLACE($columnNominal, "Rp ", "") AS INTEGER)) as TotalPengeluaran, $columnWaktu FROM $table WHERE $columnWaktu LIKE "% $bulan %" group by $columnWaktu ');
 
     print('ini resultnya $results');
     return results;

@@ -57,8 +57,6 @@ class _PieChartTipePengeluaranState extends State<PieChartTipePengeluaran> {
 
     for (int i = 0; i < data.length; i++) {
       DateTime waktu = DateFormat('EEEE dd MMMM yyyy').parse(data[i]['waktu']);
-      // pieChartData.add(PieChartData(data[i]['tipe'], data[i]['nominal'],
-      //     data[i]['nominal'] * 100.0 / totalnominal));
 
       if (waktu.month == DateTime.now().month) {
         pieChartData.add(PieChartData(data[i]['tipe'], data[i]['nominal'] / 2,
@@ -81,7 +79,6 @@ class _PieChartTipePengeluaranState extends State<PieChartTipePengeluaran> {
       ],
       legend: Legend(
         isVisible: true,
-        // overflowMode: LegendItemOverflowMode.wrap,
         position: LegendPosition.left,
         textStyle: const TextStyle(fontSize: 12, color: Colors.white),
       ),
@@ -98,7 +95,6 @@ class _PieChartTipePengeluaranState extends State<PieChartTipePengeluaran> {
                 color: Colors.white,
                 labelPosition: ChartDataLabelPosition.inside),
             dataLabelMapper: (PieChartData data, _) =>
-                // currencyFormatter.format(data.yData),
                 data.percent.toStringAsFixed(2) + '%')
       ],
     );
