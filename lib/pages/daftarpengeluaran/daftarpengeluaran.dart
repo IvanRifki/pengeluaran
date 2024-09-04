@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:pengeluaran/charts/pieChartTipePengeluaran.dart';
@@ -103,6 +104,10 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
     });
   }
 
+  removedot(nominal) {
+    return nominal.toString().replaceAll('.', '');
+  }
+
   void hideKeyboard() {
     KeyboardVisibilityController().isVisible;
   }
@@ -125,7 +130,9 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
               ? dataPengeluaran[i]['nominal'].toString().replaceAll('Rp', '')
               : dataPengeluaran[i]['nominal'];
 
-      var Pengeluarannya = int.parse(cekRp);
+      var Pengeluarannya = int.parse(
+        removedot(cekRp), //untuk hapus titik disini
+      );
 
       totalPengeluaran = totalPengeluaran + Pengeluarannya;
 
@@ -282,6 +289,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                   return null;
                 },
                 keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 controller: nominalPengeluaranController,
                 decoration: const InputDecoration(
                   labelText: 'Nominal',
@@ -803,7 +811,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
 
                           Color colorValue;
 
-                          if (int.parse(nominalSaja) < 100000) {
+                          if (int.parse(removedot(nominalSaja)) < 100000) {
                             colorValue = Color.fromRGBO(231, 70, 70, 1);
                           } else {
                             colorValue = Color.fromRGBO(149, 1, 1, 1);
@@ -878,7 +886,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                                 ),
                               ),
                               trailing: Text(
-                                '- ${currencyFormatter.format(int.parse(nominalSaja))}',
+                                '- ${currencyFormatter.format(int.parse(removedot(nominalSaja)))}',
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
@@ -916,10 +924,15 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                                                   style: TextStyle(
                                                       color: Colors.grey),
                                                 ),
-                                                Text(
-                                                  '${_daftarpengeluaran[index]['pengeluaran']}',
-                                                  style: TextStyle(
-                                                      color: Colors.amber),
+                                                Expanded(
+                                                  child: Text(
+                                                    '${_daftarpengeluaran[index]['pengeluaran']}',
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: TextStyle(
+                                                      color: Colors.amber,
+                                                    ),
+                                                  ),
                                                 ),
                                               ],
                                             ),
@@ -935,7 +948,8 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                                                 ),
                                                 Text(
                                                   currencyFormatter.format(
-                                                    int.parse(nominalSaja),
+                                                    int.parse(
+                                                        removedot(nominalSaja)),
                                                   ),
                                                   style: TextStyle(
                                                       color: Colors.amber),

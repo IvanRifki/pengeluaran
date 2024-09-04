@@ -182,7 +182,9 @@ class _DashboardState extends State<Dashboard> {
               ? dataPengeluaran[i]['nominal'].toString().replaceAll('Rp', '')
               : dataPengeluaran[i]['nominal'];
 
-      var Pengeluarannya = int.parse(cekRp);
+      var Pengeluarannya = int.parse(
+        cekRp.toString().replaceAll('.', ''), //untuk hapus titik disini
+      );
       print('ini pengeluarannya $Pengeluarannya');
       print('ini pengeluarannya total $totalPengeluaranBulanan');
       totalPengeluaranBulanan = totalPengeluaranBulanan + Pengeluarannya;
