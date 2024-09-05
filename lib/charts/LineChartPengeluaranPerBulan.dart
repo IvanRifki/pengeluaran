@@ -138,6 +138,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pengeluaran.dart';
+import 'package:pengeluaran/function/functions.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class LineChartPengeluaranPerBulan extends StatefulWidget {
@@ -181,7 +182,10 @@ class _LineChartPengeluaranPerBulanState
       setState(() {
         _chartdata = data
             .map((data) => LineChartData(
-                data['TotalPengeluaran'] as int,
+                int.parse(
+                  removedot(removerp(data['TotalPengeluaran'])),
+                ),
+                // data['TotalPengeluaran'] as int,
                 DateFormat('dd-MMMM').format(DateFormat('EEEE dd MMMM yyyy')
                     .parse(data['waktu'] as String))))
             .toList();
@@ -194,13 +198,10 @@ class _LineChartPengeluaranPerBulanState
     }
   }
 
-  _BuilChart() {
-    if (_chartdata.isEmpty) {
-      // Display a placeholder or message if there's no data
-      return Center();
-    } else {
+  _builChart() {
+    if (_chartdata.isNotEmpty) {
       return SfCartesianChart(
-        legend: Legend(
+        legend: const Legend(
           isVisible: true,
           textStyle: TextStyle(color: Colors.white),
           position: LegendPosition.bottom,
@@ -215,21 +216,21 @@ class _LineChartPengeluaranPerBulanState
             enablePanning: true,
             enablePinching: true,
             enableDoubleTapZooming: true),
-        primaryYAxis: NumericAxis(
+        primaryYAxis: const NumericAxis(
           labelStyle: TextStyle(color: Colors.white),
         ),
-        primaryXAxis: CategoryAxis(
+        primaryXAxis: const CategoryAxis(
           labelStyle: TextStyle(color: Colors.white),
         ),
         series: <CartesianSeries<LineChartData, String>>[
           LineSeries<LineChartData, String>(
-            color: Color(0xFFFFC107),
+            color: const Color(0xFFFFC107),
             name: 'Banyaknya Pengeluaran',
             enableTooltip: true,
             dataSource: _chartdata,
             xValueMapper: (LineChartData data, _) => data.waktu,
             yValueMapper: (LineChartData data, _) => data.total,
-            dataLabelSettings: DataLabelSettings(
+            dataLabelSettings: const DataLabelSettings(
               isVisible: true,
               labelPosition: ChartDataLabelPosition.inside,
               color: Colors.amber,
@@ -238,7 +239,8 @@ class _LineChartPengeluaranPerBulanState
             dataLabelMapper: (datum, index) {
               return currencyFormatter.format(datum.total);
             },
-            markerSettings: MarkerSettings(isVisible: true, color: Colors.red),
+            markerSettings:
+                const MarkerSettings(isVisible: true, color: Colors.red),
           ),
         ],
       );
@@ -247,7 +249,6 @@ class _LineChartPengeluaranPerBulanState
 
   @override
   Widget build(BuildContext context) {
-    print('ini chartdatanya $_chartdata');
-    return _chartdata != 0 ? _BuilChart() : Container();
+    return _chartdata.isNotEmpty ? _builChart() : Container();
   }
 }

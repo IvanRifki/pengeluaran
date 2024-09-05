@@ -47,9 +47,9 @@ final _formKey = GlobalKey<FormState>();
 class _DashboardState extends State<Dashboard> {
   @override
   void initState() {
-    totalPengeluaranBulanan = 0;
-    totalPendapatanBulanan = 0;
     setState(() {
+      totalPengeluaranBulanan = 0;
+      totalPendapatanBulanan = 0;
       getPengeluaran();
       getPendapatan();
     });
@@ -185,8 +185,6 @@ class _DashboardState extends State<Dashboard> {
       var Pengeluarannya = int.parse(
         cekRp.toString().replaceAll('.', ''), //untuk hapus titik disini
       );
-      print('ini pengeluarannya $Pengeluarannya');
-      print('ini pengeluarannya total $totalPengeluaranBulanan');
       totalPengeluaranBulanan = totalPengeluaranBulanan + Pengeluarannya;
     }
 
@@ -850,7 +848,6 @@ class _DashboardState extends State<Dashboard> {
                                                       Colors.grey[800],
                                                 ),
                                                 onPressed: () {
-                                                  // wkwkwk
                                                   showModalBottomSheet(
                                                       useSafeArea: true,
                                                       context: context,

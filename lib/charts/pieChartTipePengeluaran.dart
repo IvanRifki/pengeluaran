@@ -105,6 +105,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pengeluaran.dart';
+import 'package:pengeluaran/function/functions.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class PieChartTipePengeluaran extends StatefulWidget {
@@ -141,11 +142,12 @@ class _PieChartTipePengeluaranState extends State<PieChartTipePengeluaran> {
 
   Future<void> getPieChartData() async {
     final data = await db.queryPieChartByType(DateTime.now().month);
-    num totalnominal = data.fold(0, (sum, item) => sum + item['nominal']);
+    num totalnominal = data.fold(0,
+        (sum, item) => sum + num.parse(removedot(removerp(item['nominal']))));
 
     pieChartData = data.map((item) {
-      final nominal = item['nominal'];
-      final percent = nominal * 100.0 / (totalnominal / 2);
+      final nominal = num.parse(removedot(removerp(item['nominal'])));
+      final percent = nominal * 100.0 / totalnominal;
       return PieChartData(item['tipe'], nominal, percent);
     }).toList();
 

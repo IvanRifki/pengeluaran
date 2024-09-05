@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 // import 'package:pengeluaran/model/pengeluaran_m.dart';
 // import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:pengeluaran/function/functions.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class DatabaseHelper {
@@ -113,19 +114,22 @@ class DatabaseHelper {
     String Bulannya = DateFormat('MMMM').format(Bulan);
 
     final db = await DatabaseHelper.instance.database;
+    // final List<Map<String, dynamic>> results = await db.rawQuery(
+    //     'Select $columnTipe, SUM(CAST(REPLACE($columnNominal, "Rp ", "") AS INTEGER)) as nominal, $columnWaktu FROM $table WHERE $columnWaktu LIKE "%$Bulannya%" GROUP BY $columnTipe');
     final List<Map<String, dynamic>> results = await db.rawQuery(
-        'Select $columnTipe, SUM(CAST(REPLACE($columnNominal, "Rp ", "") AS INTEGER)) as nominal, $columnWaktu FROM $table WHERE $columnWaktu LIKE "%$Bulannya%" GROUP BY $columnTipe');
-
+        'Select $columnTipe, SUM(REPLACE(REPLACE($columnNominal, ".", ""), "Rp ","")) as nominal, $columnWaktu FROM $table WHERE $columnWaktu LIKE "%$Bulannya%" GROUP BY $columnTipe');
     return results;
   }
 
   Future<List<Map<String, dynamic>>> queryLineChartPengeluaran(bulan) async {
+    final total = removerp(removedot(columnNominal));
     final db = await DatabaseHelper.instance.database;
-    final List<Map<String, dynamic>> results = await db.rawQuery(
-        'Select SUM(CAST(REPLACE($columnNominal, "Rp ", "") AS INTEGER)) as TotalPengeluaran, $columnWaktu FROM $table WHERE $columnWaktu LIKE "% $bulan %" group by $columnWaktu ');
+    // final List<Map<String, dynamic>> results = await db.rawQuery(
+    //     'Select SUM(CAST(REPLACE($columnNominal, "Rp ", "") AS INTEGER)) as TotalPengeluaran, $columnWaktu FROM $table WHERE $columnWaktu LIKE "% $bulan %" group by $columnWaktu ');
 
-    print('ini resultnya $results');
-    return results;
+    final List<Map<String, dynamic>> resultsLCP = await db.rawQuery(
+        'Select SUM(REPLACE(REPLACE($columnNominal, ".", ""), "Rp ", "")) as TotalPengeluaran, $columnWaktu FROM $table WHERE $columnWaktu LIKE "% $bulan %" group by $columnWaktu ');
+    return resultsLCP;
   }
 
   Future<int> update(int id, Map<String, dynamic> row) async {

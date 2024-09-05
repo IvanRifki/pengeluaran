@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:pengeluaran/charts/pieChartTipePengeluaran.dart';
+import 'package:pengeluaran/function/functions.dart';
 import 'package:pengeluaran/static/static.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pengeluaran.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
@@ -104,9 +105,9 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
     });
   }
 
-  removedot(nominal) {
-    return nominal.toString().replaceAll('.', '');
-  }
+  // removedot(nominal) {
+  //   return nominal.toString().replaceAll('.', '');
+  // }
 
   void hideKeyboard() {
     KeyboardVisibilityController().isVisible;
@@ -927,6 +928,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                                                 Expanded(
                                                   child: Text(
                                                     '${_daftarpengeluaran[index]['pengeluaran']}',
+                                                    textAlign: TextAlign.right,
                                                     overflow:
                                                         TextOverflow.ellipsis,
                                                     style: TextStyle(
