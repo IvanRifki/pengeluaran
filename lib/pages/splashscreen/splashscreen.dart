@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pengeluaran/main.dart';
 import 'package:pengeluaran/mainmenu.dart';
+import 'package:pengeluaran/pages/daftarpengeluaran/daftarpengeluaran.dart';
 import 'dart:async';
 
 import 'package:pengeluaran/pages/dashboard/dashboard.dart';
@@ -19,11 +20,15 @@ void Main() async {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  @override
   void initState() {
     super.initState();
-    Timer(Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (BuildContext context) => const Dashboard()));
+    Timer(const Duration(seconds: 3), () {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (BuildContext context) => const Dashboard()),
+        // MaterialPageRoute(
+        //     builder: (BuildContext context) => const Daftarpengeluaran()),
+      );
     });
   }
 

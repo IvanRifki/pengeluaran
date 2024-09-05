@@ -76,19 +76,45 @@ class DatabaseHelper {
     return await db.insert(table, row);
   }
 
-  Future<List<Map<String, dynamic>>> queryAll() async {
+  Future<List<Map<String, dynamic>>> queryAll(tipenya, sort) async {
+    // final urut = sort ?? = 'DESC';
+    if (sort == 'A - Z') {
+      sort = 'ASC';
+    } else if (sort == 'Z - A') {
+      sort = 'DESC';
+    } else {
+      sort = '';
+    }
+
     Database db = await instance.database;
-    return await db.query(
-      table,
-      columns: [
-        columnId,
-        columnPengeluaran,
-        columnNominal,
-        columnWaktu,
-        columnTipe
-      ],
-      orderBy: '$columnId DESC',
-    );
+
+    if (tipenya == '') {
+      return await db.query(
+        table,
+        columns: [
+          columnId,
+          columnPengeluaran,
+          columnNominal,
+          columnWaktu,
+          columnTipe
+        ],
+        orderBy: '$columnId $sort',
+      );
+    } else {
+      return await db.query(
+        table,
+        columns: [
+          columnId,
+          columnPengeluaran,
+          columnNominal,
+          columnWaktu,
+          columnTipe
+        ],
+        where: '$columnTipe = ?',
+        whereArgs: ['$tipenya'],
+        orderBy: '$columnId $sort',
+      );
+    }
   }
 
   Future<List<Map<String, dynamic>>> queryAllByPengeluaran(

@@ -5,7 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_file.dart';
-import 'package:pengeluaran/charts/LineChartPengeluaranPerBulan.dart';
+import 'package:pengeluaran/charts/lineChartPengeluaranPerBulan.dart';
 // import 'package:pengeluaran/charts/lineChartPengeluaran.dart';
 import 'package:pengeluaran/charts/pieChartTipePengeluaran.dart';
 import 'package:pengeluaran/model/pendapatan_m.dart';
@@ -172,7 +172,7 @@ class _DashboardState extends State<Dashboard> {
   }
 
   Future<void> getPengeluaran() async {
-    List<Map<String, dynamic>> dataPengeluaran = await db.queryAll();
+    List<Map<String, dynamic>> dataPengeluaran = await db.queryAll('', '');
 
     for (var i = 0; i < dataPengeluaran.length; i++) {
       var cekRp = dataPengeluaran[i]['nominal'].toString().contains('Rp ') ==
@@ -747,16 +747,10 @@ class _DashboardState extends State<Dashboard> {
                                                 ).then(
                                                   (value) {
                                                     if (mounted) {
-                                                      loadulang();
                                                       setState(() {});
                                                     }
                                                   },
                                                 );
-                                                // .then((value) {
-                                                //   if (mounted) {
-                                                //     loadulang();
-                                                //   }
-                                                // })
                                                 ;
                                               },
                                               label: Text(

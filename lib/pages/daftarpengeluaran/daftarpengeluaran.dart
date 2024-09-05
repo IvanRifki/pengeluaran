@@ -35,8 +35,10 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
   final nominalPengeluaranController = TextEditingController();
   final waktuPengeluaranController = TextEditingController();
   final tipePengeluaranController = TextEditingController();
+  final urutPengeluaranController = TextEditingController();
   final cariPengeluaranController = TextEditingController();
   final FocusNode myFocusNode = FocusNode();
+  String filterData = '';
 
   var filterPengeluaran = '';
 
@@ -48,6 +50,10 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
     'Makanan',
     'Transportasi'
   ];
+  List<String> ddlUrutPengeluaran = [
+    'A - Z',
+    'Z - A',
+  ];
 
   // final KeyboardVisibilityController _keyboardVisibilityController =
   //     KeyboardVisibilityController();
@@ -58,7 +64,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
   @override
   void initState() {
     super.initState();
-    getPengeluaran();
+    getPengeluaran('', '');
   }
 
   @override
@@ -117,8 +123,22 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
     myFocusNode.unfocus();
   }
 
-  Future<void> getPengeluaran() async {
-    List<Map<String, dynamic>> dataPengeluaran = await db.queryAll();
+  Future<void> getPengeluaran(Tipe, Sort) async {
+    if (Tipe == '' && Sort == '') {
+      filterData = 'Filter Data : Semua';
+    } else if (Tipe == '' && Sort != '') {
+      filterData = Sort;
+    } else if (Tipe != '' && Sort == '') {
+      filterData = Tipe;
+    } else {
+      filterData = Tipe + ' - ' + Sort;
+    }
+
+    print('ini filter datanya $filterData');
+
+    final tipe = Tipe ?? '';
+    final sort = Sort ?? '';
+    List<Map<String, dynamic>> dataPengeluaran = await db.queryAll(tipe, sort);
 
     totalPengeluaran = 0;
     PengeluaranBulanan = 0;
@@ -165,7 +185,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
 
   Future<void> deletePengeluaran(int id) async {
     await db.delete(id);
-    getPengeluaran();
+    getPengeluaran('', '');
   }
 
   Future<void> selectDate(BuildContext context) async {
@@ -398,13 +418,156 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                   tipePengeluaranController.text,
                 );
 
-                getPengeluaran();
+                getPengeluaran('', '');
               });
 
               Navigator.of(context).pop();
               if (mounted) {
                 showAndCloseDialog(
                     'Berhasil', 'Pengeluaran Berhasil Tersimpan!');
+              }
+            }
+          },
+          child: const Text(
+            'Simpan',
+            style: TextStyle(
+                color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget popupFilterPengeluaran() {
+    Set<String> ddlItemTipePengeluaranSet = ddlItemTipePengeluaran.toSet();
+    Set<String> ddlUrutPengeluaranSet = ddlUrutPengeluaran.toSet();
+    return AlertDialog(
+      backgroundColor: Colors.grey[900],
+      icon: Icon(
+        Icons.filter_list,
+        size: 50,
+        color: Colors.amber,
+      ),
+      titleTextStyle: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 18,
+        color: Colors.amber,
+      ),
+      title: Text(
+        'Filter Pengeluaran',
+      ),
+      content: Form(
+        key: formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Dropdown tipe pengeluaran
+            DropdownButtonFormField<String>(
+              borderRadius: BorderRadius.all(
+                Radius.circular(20),
+              ),
+              dropdownColor: Colors.grey[850],
+              style: TextStyle(
+                color: Colors.amber,
+                fontSize: 16,
+              ),
+              items: ddlItemTipePengeluaranSet.map((String item) {
+                return DropdownMenuItem<String>(
+                  value: item,
+                  child: Row(
+                    children: [
+                      Icon(Icons.arrow_right, color: Colors.amber),
+                      Text(item),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  tipePengeluaranController.text = newValue.toString();
+                });
+              },
+              validator: (value) {
+                if (value == null) {
+                  return 'Tipe Tidak Boleh Kosong';
+                }
+                return null;
+              },
+              decoration: InputDecoration(
+                labelText: 'Tipe Pengeluaran',
+                hintStyle: TextStyle(color: Colors.grey),
+                labelStyle: TextStyle(color: Colors.white),
+                errorStyle: TextStyle(color: Colors.red),
+              ),
+            ),
+
+            // Dropdown urut berdasarkan
+            DropdownButtonFormField<String>(
+              borderRadius: BorderRadius.all(
+                Radius.circular(20),
+              ),
+              dropdownColor: Colors.grey[850],
+              style: TextStyle(
+                color: Colors.amber,
+                fontSize: 16,
+              ),
+              items: ddlUrutPengeluaranSet.map((String item) {
+                return DropdownMenuItem<String>(
+                  value: item,
+                  child: Row(
+                    children: [
+                      Icon(Icons.arrow_right, color: Colors.amber),
+                      Text(item),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  urutPengeluaranController.text = newValue.toString();
+                });
+              },
+              validator: (value) {
+                if (value == null) {
+                  return 'Urutan Tidak Boleh Kosong';
+                }
+                return null;
+              },
+              decoration: InputDecoration(
+                labelText: 'Urutkan Pengeluaran',
+                hintStyle: TextStyle(color: Colors.grey),
+                labelStyle: TextStyle(color: Colors.white),
+                errorStyle: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actionsAlignment: MainAxisAlignment.spaceBetween,
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text('Batal',
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              )),
+        ),
+        TextButton(
+          onPressed: () {
+            if (formKey.currentState!.validate()) {
+              setState(() {
+                getPengeluaran(tipePengeluaranController.text,
+                    urutPengeluaranController.text);
+              });
+
+              Navigator.of(context).pop();
+              if (mounted) {
+                // showAndCloseDialog(
+                //     'Berhasil', 'Pengeluaran Berhasil Tersimpan!');
               }
             }
           },
@@ -575,7 +738,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                   waktuPengeluaranController.text,
                   tipePengeluaranController.text,
                 );
-                getPengeluaran();
+                getPengeluaran('', '');
               });
 
               Navigator.of(context).pop();
@@ -616,7 +779,10 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                             color: Colors.amber,
                           ),
                           onPressed: () {
-                            Navigator.pop(context, true);
+                            if (mounted) {
+                              // Navigator.pop(context, true);
+                              Navigator.pop(context);
+                            }
                           },
                         ),
                         IconButton(
@@ -713,7 +879,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                       setState(() {
                         unfocusText();
 
-                        getPengeluaran();
+                        getPengeluaran('', '');
                       });
                     },
                   ),
@@ -722,7 +888,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                   // print('ini carinya bang ${value}');
                   setState(() {
                     if (value == '') {
-                      getPengeluaran();
+                      getPengeluaran('', '');
                     } else {
                       getPengeluaranByName(value);
                     }
@@ -752,17 +918,32 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                           ),
                     Row(
                       children: [
-                        Text(
-                          'Filter Data',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.filter_list,
-                            color: Colors.white,
-                          ),
-                          onPressed: () {},
-                        ),
+                        TextButton.icon(
+                            iconAlignment: IconAlignment.end,
+                            onPressed: () {
+                              if (filterData == 'Filter Data : Semua') {
+                                showDialog(
+                                    context: context,
+                                    builder: (_) {
+                                      return popupFilterPengeluaran();
+                                    });
+                              } else {
+                                getPengeluaran('', '');
+                              }
+                            },
+                            label: Text(
+                              '$filterData',
+                              style: TextStyle(color: Colors.amber),
+                            ),
+                            icon: filterData == 'Filter Data : Semua'
+                                ? Icon(
+                                    Icons.filter_list,
+                                    color: Colors.white,
+                                  )
+                                : Icon(
+                                    Icons.clear_rounded,
+                                    color: Colors.red,
+                                  )),
                       ],
                     )
                   ]),
