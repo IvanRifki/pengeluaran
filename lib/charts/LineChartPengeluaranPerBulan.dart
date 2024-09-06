@@ -50,7 +50,7 @@ class _LineChartPengeluaranPerBulanState
                   removedot(removerp(data['TotalPengeluaran'])),
                 ),
                 // data['TotalPengeluaran'] as int,
-                DateFormat('dd-MMMM').format(DateFormat('EEEE dd MMMM yyyy')
+                DateFormat('dd MMM').format(DateFormat('EEEE dd MMMM yyyy')
                     .parse(data['waktu'] as String))))
             .toList();
       });

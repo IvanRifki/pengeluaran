@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_file.dart';
 import 'package:pengeluaran/charts/lineChartPengeluaranPerBulan.dart';
-// import 'package:pengeluaran/charts/lineChartPengeluaran.dart';
 import 'package:pengeluaran/charts/pieChartTipePengeluaran.dart';
 import 'package:pengeluaran/model/pendapatan_m.dart';
 import 'package:pengeluaran/pages/daftarpengeluaran/daftarpengeluaran.dart';
@@ -23,6 +22,7 @@ class Dashboard extends StatefulWidget {
 }
 
 var totalPengeluaranBulanan = 0;
+var totalPengeluaranBulananAkhir = 0;
 var totalPendapatanBulanan = 0;
 
 void main() async {
@@ -62,10 +62,10 @@ class _DashboardState extends State<Dashboard> {
         builder: (context) => const Dashboard(),
       ),
     );
-    setState(() {
-      getPengeluaran();
-      getPendapatan();
-    });
+    // setState(() {
+    //   getPengeluaran();
+    //   getPendapatan();
+    // });
   }
 
   NumberFormat currencyFormatter = NumberFormat.currency(
@@ -172,6 +172,7 @@ class _DashboardState extends State<Dashboard> {
   }
 
   Future<void> getPengeluaran() async {
+    totalPengeluaranBulanan = 0;
     List<Map<String, dynamic>> dataPengeluaran = await db.queryAll('', '');
 
     for (var i = 0; i < dataPengeluaran.length; i++) {
@@ -189,31 +190,53 @@ class _DashboardState extends State<Dashboard> {
     }
 
     setState(() {
-      _daftarpengeluaran = dataPengeluaran;
+      totalPengeluaranBulananAkhir = totalPengeluaranBulanan;
     });
   }
 
-  Widget containerChart() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          height: 220,
-          color: Colors.transparent,
-          child: Center(
-            child: PieChartTipePengeluaran(),
+  Widget containerChart(pengeluarannya) {
+    if (pengeluarannya > 0) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            height: 220,
+            color: Colors.transparent,
+            child: Center(
+              child: PieChartTipePengeluaran(),
+            ),
           ),
+          totalPengeluaranBulanan != 0
+              ? Container(
+                  color: Colors.transparent,
+                  child: Center(
+                    child: LineChartPengeluaranPerBulan(),
+                  ),
+                )
+              : SizedBox(),
+        ],
+      );
+    } else {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: defaultPadding * 5,
+            ),
+            Icon(
+              Icons.thumb_up_alt_rounded,
+              size: 100,
+              color: Colors.grey[850],
+            ),
+            Text(
+              'Belum ada data pengeluaran',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
         ),
-        totalPengeluaranBulanan != 0
-            ? Container(
-                color: Colors.transparent,
-                child: Center(
-                  child: LineChartPengeluaranPerBulan(),
-                ),
-              )
-            : SizedBox(),
-      ],
-    );
+      );
+    }
   }
 
   showAndCloseDialog(title, content) async {
@@ -223,7 +246,7 @@ class _DashboardState extends State<Dashboard> {
         return showAndCloseAlertDialog(title, content);
       },
     ).then((value) {
-      setState(() {});
+      refreshPage();
     });
 
     if (mounted) {
@@ -546,77 +569,85 @@ class _DashboardState extends State<Dashboard> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(20.0)),
-              ),
-              backgroundColor: Colors.grey[850],
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '$pendapatan',
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(20.0)),
+            ),
+            backgroundColor: Colors.grey[850],
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$pendapatan',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                    '${currencyFormatter.format(int.parse(nominal.replaceAll('Rp ', '')))}',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontSize: 20,
+                    )),
+                const SizedBox(height: defaultPadding),
+                const Text('Hapus pengeluaran ini ?',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
+                    )),
+                const SizedBox(height: defaultPadding / 2),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    TextButton(
+                        style: TextButton.styleFrom(
+                            padding: EdgeInsets.only(
+                                left: defaultPadding * 2,
+                                right: defaultPadding * 2),
+                            backgroundColor: Colors.grey[900]),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('Tidak',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ))),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                          padding: EdgeInsets.only(
+                              left: defaultPadding * 2,
+                              right: defaultPadding * 2),
+                          backgroundColor: Colors.red),
+                      onPressed: () async {
+                        Navigator.of(context).pop();
+                        await dbPendapatan.delete(idnya);
+                        getPendapatan();
+                        Navigator.of(context).pop();
+                        showAndCloseDialog(
+                            'Berhasil', 'Pendapatan Berhasil Terhapus!');
+                      },
+                      child: const Text(
+                        'Ya',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                     ),
-                  ),
-                  Text(
-                      '${currencyFormatter.format(int.parse(nominal.replaceAll('Rp ', '')))}',
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontSize: 20,
-                      )),
-                  const SizedBox(height: defaultPadding),
-                  const Text('Hapus pengeluaran ini ?',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      )),
-                  const SizedBox(height: defaultPadding / 2),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      TextButton(
-                          style: TextButton.styleFrom(
-                              padding: EdgeInsets.only(
-                                  left: defaultPadding * 2,
-                                  right: defaultPadding * 2),
-                              backgroundColor: Colors.grey[900]),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text('Tidak',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ))),
-                      TextButton(
-                          style: TextButton.styleFrom(
-                              padding: EdgeInsets.only(
-                                  left: defaultPadding * 2,
-                                  right: defaultPadding * 2),
-                              backgroundColor: Colors.red),
-                          onPressed: () async {
-                            Navigator.of(context).pop();
-                            await dbPendapatan.delete(idnya)
-                                // .then((value) {
-                                //   loadulang();
-                                // })
-                                ;
-                            showAndCloseDialog(
-                                'Berhasil', 'Pendapatan Berhasil Terhapus!');
-                          },
-                          child: const Text('Ya',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              )))
-                    ],
-                  )
-                ],
-              ));
+                  ],
+                ),
+              ],
+            ),
+          );
         });
+  }
+
+  void refreshPage() {
+    setState(() {
+      getPendapatan();
+    });
   }
 
   @override
@@ -745,13 +776,11 @@ class _DashboardState extends State<Dashboard> {
                                                         const Daftarpengeluaran(),
                                                   ),
                                                 ).then(
-                                                  (value) {
-                                                    if (mounted) {
-                                                      setState(() {});
-                                                    }
+                                                  (_) {
+                                                    getPengeluaran();
+                                                    refreshPage();
                                                   },
                                                 );
-                                                ;
                                               },
                                               label: Text(
                                                 'Daftar Pengeluaran',
@@ -907,7 +936,8 @@ class _DashboardState extends State<Dashboard> {
                                                 ),
                                               ).then(
                                                 (value) {
-                                                  setState(() {});
+                                                  getPengeluaran();
+                                                  refreshPage();
                                                 },
                                               );
                                             },
@@ -964,27 +994,28 @@ class _DashboardState extends State<Dashboard> {
                     color: Colors.green[900],
                   ),
                 ),
-                totalPengeluaranBulanan != 0
-                    ? containerChart()
-                    : Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              height: defaultPadding * 5,
-                            ),
-                            Icon(
-                              Icons.thumb_up_alt_rounded,
-                              size: 100,
-                              color: Colors.grey[850],
-                            ),
-                            Text(
-                              'Belum ada data pengeluaran',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      ),
+                containerChart(totalPengeluaranBulanan),
+                // totalPengeluaranBulanan > 0
+                //     ? containerChart()
+                //     : Center(
+                //         child: Column(
+                //           mainAxisSize: MainAxisSize.min,
+                //           children: [
+                //             SizedBox(
+                //               height: defaultPadding * 5,
+                //             ),
+                //             Icon(
+                //               Icons.thumb_up_alt_rounded,
+                //               size: 100,
+                //               color: Colors.grey[850],
+                //             ),
+                //             Text(
+                //               'Belum ada data pengeluaran',
+                //               style: TextStyle(color: Colors.grey),
+                //             ),
+                //           ],
+                //         ),
+                //       ),
               ],
             ),
           ),
