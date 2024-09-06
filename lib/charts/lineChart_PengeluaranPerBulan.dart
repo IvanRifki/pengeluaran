@@ -15,12 +15,6 @@ class LineChartPengeluaranPerBulan extends StatefulWidget {
 
 final db = DatabaseHelper.instance;
 
-NumberFormat currencyFormatter = NumberFormat.currency(
-  locale: 'id_ID',
-  symbol: 'Rp ',
-  decimalDigits: 0,
-);
-
 List<LineChartData> _chartdata = [];
 
 class LineChartData {
@@ -38,7 +32,7 @@ class _LineChartPengeluaranPerBulanState
   }
 
   Future<void> getChartData() async {
-    final bulanini = DateFormat('MMMM').format(DateTime.now());
+    final bulanini = bulanSekarang();
     final data = await db.queryLineChartPengeluaran(bulanini);
     _chartdata.clear();
 
@@ -49,15 +43,13 @@ class _LineChartPengeluaranPerBulanState
                 int.parse(
                   removedot(removerp(data['TotalPengeluaran'])),
                 ),
-                // data['TotalPengeluaran'] as int,
                 DateFormat('dd MMM').format(DateFormat('EEEE dd MMMM yyyy')
                     .parse(data['waktu'] as String))))
             .toList();
       });
     } else {
       setState(() {
-        _chartdata =
-            []; // Ensure _chartdata is set to an empty list if no data is available
+        _chartdata = [];
       });
     }
   }
@@ -101,7 +93,7 @@ class _LineChartPengeluaranPerBulanState
               textStyle: TextStyle(fontWeight: FontWeight.bold),
             ),
             dataLabelMapper: (datum, index) {
-              return currencyFormatter.format(datum.total);
+              return currencyFormatterRp.format(datum.total);
             },
             markerSettings:
                 const MarkerSettings(isVisible: true, color: Colors.red),

@@ -1,8 +1,4 @@
 import 'dart:io';
-
-// import 'package:intl/intl.dart';
-// import 'package:pengeluaran/model/pendapatan_m.dart';
-// import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -45,16 +41,6 @@ class DatabaseHelperPendapatan {
         version: _databaseVersion,
       ),
     );
-    // sqfliteFfiInit();
-    // final databaseFactory = databaseFactoryFfi;
-    // final path = join(await getDatabasesPath(), _databaseName);
-    // return await databaseFactory.openDatabase(
-    //   path,
-    //   options: OpenDatabaseOptions(
-    //     onCreate: _onCreate,
-    //     version: _databaseVersion,
-    //   ),
-    // );
   }
 
   Future<Database> _initDatabase() async {
@@ -111,7 +97,7 @@ class DatabaseHelperPendapatan {
       ],
       orderBy: '$columnWaktu DESC',
       where: '$columnPendapatan LIKE ?',
-      whereArgs: ['%${namaPengeluaran}%'],
+      whereArgs: ['%$namaPengeluaran%'],
     );
   }
 

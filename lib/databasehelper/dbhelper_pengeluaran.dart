@@ -1,10 +1,6 @@
 import 'dart:io';
-
 import 'package:intl/intl.dart';
-// import 'package:pengeluaran/model/pengeluaran_m.dart';
-// import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:pengeluaran/function/functions.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class DatabaseHelper {
@@ -23,9 +19,6 @@ class DatabaseHelper {
   DatabaseHelper._private();
 
   Future<Database> get database async {
-    // if (_database != null) return _database!;
-    // _database = await _initDatabase();
-    // return _database!;
     if (_database != null) {
       return _database!;
     }
@@ -77,7 +70,6 @@ class DatabaseHelper {
   }
 
   Future<List<Map<String, dynamic>>> queryAll(tipenya, sort) async {
-    // final urut = sort ?? = 'DESC';
     if (sort == 'A - Z') {
       sort = 'ASC';
     } else if (sort == 'Z - A') {
@@ -131,27 +123,22 @@ class DatabaseHelper {
       ],
       orderBy: '$columnWaktu DESC',
       where: '$columnPengeluaran LIKE ?',
-      whereArgs: ['%${namaPengeluaran}%'],
+      whereArgs: ['%$namaPengeluaran%'],
     );
   }
 
   Future<List<Map<String, dynamic>>> queryPieChartByType(waktu) async {
-    DateTime Bulan = DateTime(1, waktu, 1);
-    String Bulannya = DateFormat('MMMM').format(Bulan);
+    DateTime bulan = DateTime(1, waktu, 1);
+    String bulannya = DateFormat('MMMM').format(bulan);
 
     final db = await DatabaseHelper.instance.database;
-    // final List<Map<String, dynamic>> results = await db.rawQuery(
-    //     'Select $columnTipe, SUM(CAST(REPLACE($columnNominal, "Rp ", "") AS INTEGER)) as nominal, $columnWaktu FROM $table WHERE $columnWaktu LIKE "%$Bulannya%" GROUP BY $columnTipe');
     final List<Map<String, dynamic>> results = await db.rawQuery(
-        'Select $columnTipe, SUM(REPLACE(REPLACE($columnNominal, ".", ""), "Rp ","")) as nominal, $columnWaktu FROM $table WHERE $columnWaktu LIKE "%$Bulannya%" GROUP BY $columnTipe');
+        'Select $columnTipe, SUM(REPLACE(REPLACE($columnNominal, ".", ""), "Rp ","")) as nominal, $columnWaktu FROM $table WHERE $columnWaktu LIKE "%$bulannya%" GROUP BY $columnTipe');
     return results;
   }
 
   Future<List<Map<String, dynamic>>> queryLineChartPengeluaran(bulan) async {
-    final total = removerp(removedot(columnNominal));
     final db = await DatabaseHelper.instance.database;
-    // final List<Map<String, dynamic>> results = await db.rawQuery(
-    //     'Select SUM(CAST(REPLACE($columnNominal, "Rp ", "") AS INTEGER)) as TotalPengeluaran, $columnWaktu FROM $table WHERE $columnWaktu LIKE "% $bulan %" group by $columnWaktu ');
 
     final List<Map<String, dynamic>> resultsLCP = await db.rawQuery(
         'Select SUM(REPLACE(REPLACE($columnNominal, ".", ""), "Rp ", "")) as TotalPengeluaran, $columnWaktu FROM $table WHERE $columnWaktu LIKE "% $bulan %" group by $columnWaktu ');

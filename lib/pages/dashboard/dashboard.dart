@@ -1,13 +1,8 @@
-// import 'dart:math';
-import 'dart:math';
-
-import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_file.dart';
-import 'package:pengeluaran/charts/lineChartPengeluaranPerBulan.dart';
-import 'package:pengeluaran/charts/pieChartTipePengeluaran.dart';
-import 'package:pengeluaran/model/pendapatan_m.dart';
+import 'package:pengeluaran/charts/lineChart_PengeluaranPerBulan.dart';
+import 'package:pengeluaran/charts/pieChart_TipePengeluaran.dart';
 import 'package:pengeluaran/pages/daftarpengeluaran/daftarpengeluaran.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pengeluaran.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pendapatan.dart';
@@ -35,7 +30,6 @@ final db = DatabaseHelper.instance;
 final dbPendapatan = DatabaseHelperPendapatan.instance;
 DateTime? selectedDate;
 
-List<Map<String, dynamic>> _daftarpengeluaran = [];
 List<Map<String, dynamic>> _daftarpendapatan = [];
 
 final namaPendapatanController = TextEditingController();
@@ -62,10 +56,6 @@ class _DashboardState extends State<Dashboard> {
         builder: (context) => const Dashboard(),
       ),
     );
-    // setState(() {
-    //   getPengeluaran();
-    //   getPendapatan();
-    // });
   }
 
   NumberFormat currencyFormatter = NumberFormat.currency(
@@ -92,8 +82,7 @@ class _DashboardState extends State<Dashboard> {
                 ? dataPendapatan[i]['nominal'].toString().replaceAll('Rp', '')
                 : dataPendapatan[i]['nominal'];
 
-        var Pendapatannya = int.parse(cekRpPendapatan);
-        // totalPendapatanBulanan = totalPendapatanBulanan + Pendapatannya;
+        var pendapatannya = int.parse(cekRpPendapatan);
 
         DateTime waktuPendapatan =
             DateFormat('EEEE dd MMMM yyyy').parse(dataPendapatan[i]['waktu']);
@@ -103,7 +92,7 @@ class _DashboardState extends State<Dashboard> {
 
         if (waktuPendapatannya == bulanIni) {
           setState(() {
-            totalPendapatanBulanan = totalPendapatanBulanan + Pendapatannya;
+            totalPendapatanBulanan = totalPendapatanBulanan + pendapatannya;
           });
         }
       }
@@ -123,7 +112,7 @@ class _DashboardState extends State<Dashboard> {
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: Colors.grey, // button text color
+                foregroundColor: Colors.grey,
               ),
             ),
           ),
@@ -144,7 +133,6 @@ class _DashboardState extends State<Dashboard> {
     );
     if (picked != null && picked != selectedDate) {
       setState(() {
-        // selectedDate = picked;
         waktuPendapatanController.text =
             DateFormat('EEEE dd MMMM yyyy').format(picked);
       });
@@ -183,10 +171,10 @@ class _DashboardState extends State<Dashboard> {
               ? dataPengeluaran[i]['nominal'].toString().replaceAll('Rp', '')
               : dataPengeluaran[i]['nominal'];
 
-      var Pengeluarannya = int.parse(
-        cekRp.toString().replaceAll('.', ''), //untuk hapus titik disini
+      var pengeluarannya = int.parse(
+        cekRp.toString().replaceAll('.', ''),
       );
-      totalPengeluaranBulanan = totalPengeluaranBulanan + Pengeluarannya;
+      totalPengeluaranBulanan = totalPengeluaranBulanan + pengeluarannya;
     }
 
     setState(() {
@@ -209,11 +197,11 @@ class _DashboardState extends State<Dashboard> {
           totalPengeluaranBulanan != 0
               ? Container(
                   color: Colors.transparent,
-                  child: Center(
+                  child: const Center(
                     child: LineChartPengeluaranPerBulan(),
                   ),
                 )
-              : SizedBox(),
+              : const SizedBox(),
         ],
       );
     } else {
@@ -259,7 +247,7 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 
-  Widget ModalBottomPendapatan() {
+  Widget modalBottomPendapatan() {
     return Container(
       width: MediaQuery.of(context).size.width - defaultPadding,
       decoration: BoxDecoration(
@@ -273,17 +261,16 @@ class _DashboardState extends State<Dashboard> {
         padding: const EdgeInsets.only(
           left: defaultPadding,
           right: defaultPadding,
-          // bottom: defaultPadding * 2
         ),
         child: Column(
           children: [
-            SizedBox(
+            const SizedBox(
               height: defaultPadding,
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   'Daftar Pendapatan',
                   style: TextStyle(
                     color: Colors.amber,
@@ -292,22 +279,22 @@ class _DashboardState extends State<Dashboard> {
                   ),
                 ),
                 TextButton.icon(
-                  label: Text(
+                  label: const Text(
                     'Tambah',
                     style: TextStyle(color: Colors.grey),
                   ),
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.add_circle,
                     color: Colors.amber,
                   ),
                   onPressed: () {
                     Navigator.of(context).pop();
-                    ShowDialogTambahPendapatan();
+                    showDialogTambahPendapatan();
                   },
                 ),
               ],
             ),
-            SizedBox(
+            const SizedBox(
               height: defaultPadding,
             ),
             Expanded(
@@ -363,12 +350,11 @@ class _DashboardState extends State<Dashboard> {
                             ],
                           ),
                           trailing: IconButton(
-                            icon: Icon(
+                            icon: const Icon(
                               Icons.delete,
                               color: Colors.red,
                             ),
                             onPressed: () {
-                              // delete pendapatan
                               deletePendapatan(
                                 _daftarpendapatan[index]['id'],
                                 _daftarpendapatan[index]['pendapatan'],
@@ -394,7 +380,7 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  void ShowDialogTambahPendapatan() {
+  void showDialogTambahPendapatan() {
     nominalPendapatanController.clear();
     namaPendapatanController.clear();
     waktuPendapatanController.clear();
@@ -402,17 +388,17 @@ class _DashboardState extends State<Dashboard> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          contentPadding: EdgeInsets.all(defaultPadding / 2),
+          contentPadding: const EdgeInsets.all(defaultPadding / 2),
           backgroundColor: Colors.grey[900],
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
-          icon: Icon(
+          icon: const Icon(
             Icons.add_circle,
             color: Colors.amber,
             size: 50,
           ),
-          title: Row(
+          title: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(
@@ -460,7 +446,7 @@ class _DashboardState extends State<Dashboard> {
                         ),
                       ),
                       TextFormField(
-                          style: TextStyle(color: Colors.amber),
+                          style: const TextStyle(color: Colors.amber),
                           validator: (valueNominal) {
                             if (valueNominal!.isEmpty) {
                               return 'Nominal Tidak Boleh Kosong';
@@ -661,7 +647,7 @@ class _DashboardState extends State<Dashboard> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                SizedBox(
+                const SizedBox(
                   height: defaultPadding,
                 ),
                 Container(
@@ -715,19 +701,19 @@ class _DashboardState extends State<Dashboard> {
                                     context: context,
                                     builder: (BuildContext context) {
                                       return AlertDialog(
-                                        contentPadding:
-                                            EdgeInsets.all(defaultPadding / 2),
+                                        contentPadding: const EdgeInsets.all(
+                                            defaultPadding / 2),
                                         backgroundColor: Colors.grey[900],
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(10),
                                         ),
-                                        icon: Icon(
+                                        icon: const Icon(
                                           Icons.menu_rounded,
                                           color: Colors.amber,
                                           size: 50,
                                         ),
-                                        title: Row(
+                                        title: const Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
@@ -782,12 +768,12 @@ class _DashboardState extends State<Dashboard> {
                                                   },
                                                 );
                                               },
-                                              label: Text(
+                                              label: const Text(
                                                 'Daftar Pengeluaran',
                                                 style: TextStyle(
                                                     color: Colors.white),
                                               ),
-                                              icon: Icon(
+                                              icon: const Icon(
                                                   Icons.menu_book_rounded,
                                                   color: Colors.white),
                                             ),
@@ -807,7 +793,7 @@ class _DashboardState extends State<Dashboard> {
                                       );
                                     });
                               },
-                              icon: Icon(
+                              icon: const Icon(
                                 Icons.menu,
                                 size: 32,
                                 color: Colors.amber,
@@ -826,7 +812,7 @@ class _DashboardState extends State<Dashboard> {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Pendapatan',
+                                const Text('Pendapatan',
                                     style: TextStyle(color: Colors.grey)),
                                 Row(
                                   children: [
@@ -835,15 +821,15 @@ class _DashboardState extends State<Dashboard> {
                                             children: [
                                               IconButton(
                                                 splashRadius: null,
-                                                icon: Icon(
+                                                icon: const Icon(
                                                   Icons.add_circle,
                                                   color: Colors.amber,
                                                 ),
                                                 onPressed: () {
-                                                  ShowDialogTambahPendapatan();
+                                                  showDialogTambahPendapatan();
                                                 },
                                               ),
-                                              Column(
+                                              const Column(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
@@ -875,28 +861,28 @@ class _DashboardState extends State<Dashboard> {
                                                       useSafeArea: true,
                                                       context: context,
                                                       builder: (context) {
-                                                        return ModalBottomPendapatan();
+                                                        return modalBottomPendapatan();
                                                       });
                                                 },
                                                 label: Text(
                                                   '${totalPendapatanBulanan == 0 ? IconButton(
                                                       hoverColor: Colors.amber,
                                                       splashRadius: 20,
-                                                      icon: Icon(
+                                                      icon: const Icon(
                                                         Icons.add_circle,
                                                         color: Colors.amber,
                                                       ),
                                                       onPressed: () {
-                                                        ShowDialogTambahPendapatan();
+                                                        showDialogTambahPendapatan();
                                                       },
                                                     ) : currencyFormatter.format(totalPendapatanBulanan)}',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                       color: Colors.green,
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       fontSize: 16),
                                                 ),
-                                                icon: Icon(
+                                                icon: const Icon(
                                                   Icons.arrow_downward,
                                                   color: Colors.green,
                                                   size: 16,
@@ -912,14 +898,14 @@ class _DashboardState extends State<Dashboard> {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Pengeluaran ',
+                                const Text('Pengeluaran ',
                                     style: TextStyle(color: Colors.grey)),
                                 totalPengeluaranBulanan == 0
                                     ? Row(
                                         children: [
                                           IconButton(
                                             splashRadius: null,
-                                            icon: Icon(
+                                            icon: const Icon(
                                               Icons.add_circle,
                                               color: Colors.amber,
                                             ),
@@ -942,7 +928,7 @@ class _DashboardState extends State<Dashboard> {
                                               );
                                             },
                                           ),
-                                          Column(
+                                          const Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
@@ -995,27 +981,6 @@ class _DashboardState extends State<Dashboard> {
                   ),
                 ),
                 containerChart(totalPengeluaranBulanan),
-                // totalPengeluaranBulanan > 0
-                //     ? containerChart()
-                //     : Center(
-                //         child: Column(
-                //           mainAxisSize: MainAxisSize.min,
-                //           children: [
-                //             SizedBox(
-                //               height: defaultPadding * 5,
-                //             ),
-                //             Icon(
-                //               Icons.thumb_up_alt_rounded,
-                //               size: 100,
-                //               color: Colors.grey[850],
-                //             ),
-                //             Text(
-                //               'Belum ada data pengeluaran',
-                //               style: TextStyle(color: Colors.grey),
-                //             ),
-                //           ],
-                //         ),
-                //       ),
               ],
             ),
           ),

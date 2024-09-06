@@ -1,16 +1,15 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
+// import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
-import 'package:pengeluaran/charts/pieChartTipePengeluaran.dart';
+// import 'package:pengeluaran/charts/pieChart_TipePengeluaran.dart';
 import 'package:pengeluaran/function/functions.dart';
 import 'package:pengeluaran/static/static.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pengeluaran.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:pengeluaran/widgets/mywidget.dart';
-import 'package:sqflite/sqflite.dart';
+// import 'package:sqflite/sqflite.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,11 +54,8 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
     'Z - A',
   ];
 
-  // final KeyboardVisibilityController _keyboardVisibilityController =
-  //     KeyboardVisibilityController();
-
   var totalPengeluaran = 0;
-  var PengeluaranBulanan = 0;
+  var pengeluaranBulanan = 0;
 
   @override
   void initState() {
@@ -99,8 +95,6 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
       DatabaseHelper.columnTipe: tipe,
     };
 
-    print('ini idnya $id');
-
     try {
       await DatabaseHelper.instance.update(id, row);
     } catch (e) {
@@ -111,10 +105,6 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
     });
   }
 
-  // removedot(nominal) {
-  //   return nominal.toString().replaceAll('.', '');
-  // }
-
   void hideKeyboard() {
     KeyboardVisibilityController().isVisible;
   }
@@ -123,25 +113,23 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
     myFocusNode.unfocus();
   }
 
-  Future<void> getPengeluaran(Tipe, Sort) async {
-    if (Tipe == '' && Sort == '') {
+  Future<void> getPengeluaran(tipenya, sortnya) async {
+    if (tipenya == '' && sortnya == '') {
       filterData = 'Filter Data : Semua';
-    } else if (Tipe == '' && Sort != '') {
-      filterData = Sort;
-    } else if (Tipe != '' && Sort == '') {
-      filterData = Tipe;
+    } else if (tipenya == '' && sortnya != '') {
+      filterData = sortnya;
+    } else if (tipenya != '' && sortnya == '') {
+      filterData = tipenya;
     } else {
-      filterData = Tipe + ' - ' + Sort;
+      filterData = tipenya + ' - ' + sortnya;
     }
 
-    print('ini filter datanya $filterData');
-
-    final tipe = Tipe ?? '';
-    final sort = Sort ?? '';
+    final tipe = tipenya ?? '';
+    final sort = sortnya ?? '';
     List<Map<String, dynamic>> dataPengeluaran = await db.queryAll(tipe, sort);
 
     totalPengeluaran = 0;
-    PengeluaranBulanan = 0;
+    pengeluaranBulanan = 0;
 
     for (var i = 0; i < dataPengeluaran.length; i++) {
       var cekRp = dataPengeluaran[i]['nominal'].toString().contains('Rp ') ==
@@ -151,22 +139,22 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
               ? dataPengeluaran[i]['nominal'].toString().replaceAll('Rp', '')
               : dataPengeluaran[i]['nominal'];
 
-      var Pengeluarannya = int.parse(
-        removedot(cekRp), //untuk hapus titik disini
+      var pengeluarannya = int.parse(
+        removedot(cekRp),
       );
 
-      totalPengeluaran = totalPengeluaran + Pengeluarannya;
+      totalPengeluaran = totalPengeluaran + pengeluarannya;
 
       DateTime waktuPengeluaran =
           DateFormat('EEEE dd MMMM yyyy').parse(dataPengeluaran[i]['waktu']);
 
-      var bulanIni = DateFormat('MMMM').format(DateTime.now());
+      var bulanIni = bulanSekarang();
       var waktuPengeluarannya = DateFormat('MMMM').format(waktuPengeluaran);
 
       if (waktuPengeluarannya == bulanIni) {
-        PengeluaranBulanan = PengeluaranBulanan + Pengeluarannya;
+        pengeluaranBulanan = pengeluaranBulanan + pengeluarannya;
       } else {
-        PengeluaranBulanan = PengeluaranBulanan;
+        pengeluaranBulanan = pengeluaranBulanan;
       }
     }
 
@@ -222,7 +210,6 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
     );
     if (picked != null && picked != selectedDate) {
       setState(() {
-        // selectedDate = picked;
         waktuPengeluaranController.text =
             DateFormat('EEEE dd MMMM yyyy').format(picked);
       });
@@ -230,17 +217,6 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
       waktuPengeluaranController.text =
           DateFormat('EEEE dd MMMM yyyy').format(DateTime.now());
     }
-  }
-
-  NumberFormat currencyFormatter = NumberFormat.currency(
-    locale: 'id_ID',
-    symbol: 'Rp ',
-    decimalDigits: 0,
-    name: 'IDR',
-  );
-
-  void _requestFocus() {
-    FocusScope.of(context).requestFocus(myFocusNode);
   }
 
   void showAndCloseDialog(title, content) async {
@@ -265,17 +241,17 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
     Set<String> ddlItemTipePengeluaranSet = ddlItemTipePengeluaran.toSet();
     return AlertDialog(
       backgroundColor: Colors.grey[900],
-      icon: Icon(
+      icon: const Icon(
         Icons.add_circle,
         size: 50,
         color: Colors.amber,
       ),
-      titleTextStyle: TextStyle(
+      titleTextStyle: const TextStyle(
         fontWeight: FontWeight.bold,
         fontSize: 18,
         color: Colors.amber,
       ),
-      title: Text(
+      title: const Text(
         'Tambah Pengeluaran',
       ),
       content: Form(
@@ -284,7 +260,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
-              style: TextStyle(color: Colors.amber),
+              style: const TextStyle(color: Colors.amber),
               validator: (valueNama) {
                 if (valueNama!.isEmpty) {
                   return 'Nama Tidak Boleh Kosong';
@@ -293,7 +269,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
               },
               keyboardType: TextInputType.name,
               controller: namaPengeluaranController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Pengeluaran',
                 hintText: 'Isikan Nama Pengeluaran',
                 labelStyle: TextStyle(color: Colors.white),
@@ -302,7 +278,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
               ),
             ),
             TextFormField(
-                style: TextStyle(color: Colors.amber),
+                style: const TextStyle(color: Colors.amber),
                 validator: (valueNominal) {
                   if (valueNominal!.isEmpty) {
                     return 'Nominal Tidak Boleh Kosong';
@@ -324,7 +300,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                     setState(() {
                       if (nominalPengeluaranController.text != 'Rp ') {
                         nominalPengeluaranController.text =
-                            currencyFormatter.format(int.parse(value));
+                            currencyFormatterRp.format(int.parse(value));
                       } else {
                         nominalPengeluaranController.clear();
                       }
@@ -352,13 +328,12 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                 errorStyle: TextStyle(color: Colors.red),
               ),
             ),
-            // Dropdown disini
             DropdownButtonFormField<String>(
-              borderRadius: BorderRadius.all(
+              borderRadius: const BorderRadius.all(
                 Radius.circular(20),
               ),
               dropdownColor: Colors.grey[850],
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.amber,
                 fontSize: 16,
               ),
@@ -367,7 +342,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                   value: item,
                   child: Row(
                     children: [
-                      Icon(Icons.arrow_right, color: Colors.amber),
+                      const Icon(Icons.arrow_right, color: Colors.amber),
                       Text(item),
                     ],
                   ),
@@ -384,7 +359,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                 }
                 return null;
               },
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Tipe Pengeluaran',
                 hintStyle: TextStyle(color: Colors.grey),
                 labelStyle: TextStyle(color: Colors.white),
@@ -400,7 +375,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: Text('Batal',
+          child: const Text('Batal',
               style: TextStyle(
                 color: Colors.grey,
                 fontSize: 16,
@@ -443,17 +418,17 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
     Set<String> ddlUrutPengeluaranSet = ddlUrutPengeluaran.toSet();
     return AlertDialog(
       backgroundColor: Colors.grey[900],
-      icon: Icon(
+      icon: const Icon(
         Icons.filter_list,
         size: 50,
         color: Colors.amber,
       ),
-      titleTextStyle: TextStyle(
+      titleTextStyle: const TextStyle(
         fontWeight: FontWeight.bold,
         fontSize: 18,
         color: Colors.amber,
       ),
-      title: Text(
+      title: const Text(
         'Filter Pengeluaran',
       ),
       content: Form(
@@ -463,11 +438,11 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
           children: [
             // Dropdown tipe pengeluaran
             DropdownButtonFormField<String>(
-              borderRadius: BorderRadius.all(
+              borderRadius: const BorderRadius.all(
                 Radius.circular(20),
               ),
               dropdownColor: Colors.grey[850],
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.amber,
                 fontSize: 16,
               ),
@@ -476,7 +451,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                   value: item,
                   child: Row(
                     children: [
-                      Icon(Icons.arrow_right, color: Colors.amber),
+                      const Icon(Icons.arrow_right, color: Colors.amber),
                       Text(item),
                     ],
                   ),
@@ -493,7 +468,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                 }
                 return null;
               },
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Tipe Pengeluaran',
                 hintStyle: TextStyle(color: Colors.grey),
                 labelStyle: TextStyle(color: Colors.white),
@@ -501,13 +476,12 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
               ),
             ),
 
-            // Dropdown urut berdasarkan
             DropdownButtonFormField<String>(
-              borderRadius: BorderRadius.all(
+              borderRadius: const BorderRadius.all(
                 Radius.circular(20),
               ),
               dropdownColor: Colors.grey[850],
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.amber,
                 fontSize: 16,
               ),
@@ -516,7 +490,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                   value: item,
                   child: Row(
                     children: [
-                      Icon(Icons.arrow_right, color: Colors.amber),
+                      const Icon(Icons.arrow_right, color: Colors.amber),
                       Text(item),
                     ],
                   ),
@@ -533,7 +507,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                 }
                 return null;
               },
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Urutkan Pengeluaran',
                 hintStyle: TextStyle(color: Colors.grey),
                 labelStyle: TextStyle(color: Colors.white),
@@ -549,7 +523,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: Text('Batal',
+          child: const Text('Batal',
               style: TextStyle(
                 color: Colors.grey,
                 fontSize: 16,
@@ -565,10 +539,6 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
               });
 
               Navigator.of(context).pop();
-              if (mounted) {
-                // showAndCloseDialog(
-                //     'Berhasil', 'Pengeluaran Berhasil Tersimpan!');
-              }
             }
           },
           child: const Text(
@@ -589,15 +559,14 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
     nominalPengeluaranController.text = nominal;
     waktuPengeluaranController.text = waktu;
     tipePengeluaranController.text = tipe;
-    print('ini ddlvaluenya $dropdownValue');
     return AlertDialog(
       backgroundColor: Colors.grey[900],
-      icon: Icon(
+      icon: const Icon(
         Icons.add_circle,
         size: 50,
         color: Colors.amber,
       ),
-      titleTextStyle: TextStyle(
+      titleTextStyle: const TextStyle(
         fontWeight: FontWeight.bold,
         fontSize: 18,
         color: Colors.amber,
@@ -609,7 +578,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextFormField(
-              style: TextStyle(color: Colors.amber),
+              style: const TextStyle(color: Colors.amber),
               validator: (valueNama) {
                 if (valueNama!.isEmpty) {
                   return 'Nama Tidak Boleh Kosong';
@@ -627,7 +596,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
               ),
             ),
             TextFormField(
-                style: TextStyle(color: Colors.amber),
+                style: const TextStyle(color: Colors.amber),
                 validator: (valueNominal) {
                   if (valueNominal!.isEmpty) {
                     return 'Nominal Tidak Boleh Kosong';
@@ -647,14 +616,14 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                   try {
                     setState(() {
                       nominalPengeluaranController.text =
-                          currencyFormatter.format(int.parse(value));
+                          currencyFormatterRp.format(int.parse(value));
                     });
                   } catch (e) {
                     print('ada error ini $e');
                   }
                 }),
             TextFormField(
-              style: TextStyle(color: Colors.amber),
+              style: const TextStyle(color: Colors.amber),
               validator: (valueWaktu) {
                 if (valueWaktu!.isEmpty) {
                   return 'Waktu Tidak Boleh Kosong';
@@ -673,11 +642,11 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
               ),
             ),
             DropdownButtonFormField<String>(
-              borderRadius: BorderRadius.all(
+              borderRadius: const BorderRadius.all(
                 Radius.circular(20.0),
               ),
               dropdownColor: Colors.grey[850],
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.amber,
                 fontSize: 16,
               ),
@@ -687,7 +656,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                   value: item,
                   child: Row(
                     children: [
-                      Icon(Icons.arrow_right, color: Colors.amber),
+                      const Icon(Icons.arrow_right, color: Colors.amber),
                       Text(item),
                     ],
                   ),
@@ -704,7 +673,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                 }
                 return null;
               },
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Tipe Pengeluaran',
                 hintStyle: TextStyle(color: Colors.grey),
                 labelStyle: TextStyle(color: Colors.white),
@@ -719,7 +688,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: Text('Batal',
+          child: const Text('Batal',
               style: TextStyle(
                 color: Colors.grey,
                 fontSize: 16,
@@ -730,7 +699,6 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
           onPressed: () {
             if (formKey.currentState!.validate()) {
               setState(() {
-                // simpan edit disini
                 updatePengeluaran(
                   idPengeluaran,
                   namaPengeluaranController.text,
@@ -765,43 +733,41 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
       body: SafeArea(
         child: Column(
           children: [
-            Container(
-              child: Padding(
-                padding: const EdgeInsets.all(defaultPadding),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        IconButton(
+            Padding(
+              padding: const EdgeInsets.all(defaultPadding),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back_ios,
+                          color: Colors.amber,
+                        ),
+                        onPressed: () {
+                          if (mounted) {
+                            // Navigator.pop(context, true);
+                            Navigator.pop(context);
+                          }
+                        },
+                      ),
+                      IconButton(
                           icon: const Icon(
-                            Icons.arrow_back_ios,
-                            color: Colors.amber,
+                            Icons.menu_book_rounded,
+                            color: Colors.white,
                           ),
-                          onPressed: () {
-                            if (mounted) {
-                              // Navigator.pop(context, true);
-                              Navigator.pop(context);
-                            }
-                          },
-                        ),
-                        IconButton(
-                            icon: const Icon(
-                              Icons.menu_book_rounded,
-                              color: Colors.white,
-                            ),
-                            onPressed: () {}),
-                        const Text(
-                          'Daftar Pengeluaran',
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                          onPressed: () {}),
+                      const Text(
+                        'Daftar Pengeluaran',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
             Padding(
@@ -815,11 +781,11 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                     children: [
                       Text(
                         'Total Pengeluaran ${DateFormat('MMMM yyyy').format(DateTime.now().toLocal())}',
-                        style: TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.white),
                       ),
                       Text(
-                        currencyFormatter.format(PengeluaranBulanan),
-                        style: TextStyle(
+                        currencyFormatterRp.format(pengeluaranBulanan),
+                        style: const TextStyle(
                             color: Colors.amber,
                             fontWeight: FontWeight.bold,
                             fontSize: 20),
@@ -827,7 +793,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                     ],
                   ),
                   IconButton(
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.add_circle,
                       size: 32,
                       color: Colors.amber,
@@ -853,7 +819,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                 ],
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: defaultPadding,
             ),
             Container(
@@ -864,28 +830,27 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                 bottom: defaultPadding / 2,
               ),
               child: TextFormField(
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
                 focusNode: myFocusNode,
                 keyboardType: TextInputType.text,
                 controller: cariPengeluaranController,
                 decoration: InputDecoration(
                   hintText: 'Cari Pengeluaran Dengan Nama',
-                  hintStyle: TextStyle(color: Colors.white54),
-                  prefixIcon: Icon(Icons.search_rounded, color: Colors.white54),
+                  hintStyle: const TextStyle(color: Colors.white54),
+                  prefixIcon:
+                      const Icon(Icons.search_rounded, color: Colors.white54),
                   suffixIcon: IconButton(
-                    icon: Icon(Icons.clear),
+                    icon: const Icon(Icons.clear),
                     onPressed: () {
                       cariPengeluaranController.clear();
                       setState(() {
                         unfocusText();
-
                         getPengeluaran('', '');
                       });
                     },
                   ),
                 ),
                 onChanged: (value) {
-                  // print('ini carinya bang ${value}');
                   setState(() {
                     if (value == '') {
                       getPengeluaran('', '');
@@ -904,18 +869,12 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
               child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    filterPengeluaran == ''
-                        ? Text(
-                            'Total ' +
-                                _daftarpengeluaran.length.toString() +
-                                ' Pengeluaran',
-                            // 'Semua Pengeluaran',
-                            style: TextStyle(color: Colors.amber),
-                          )
-                        : Text(
-                            filterPengeluaran,
-                            style: TextStyle(color: Colors.amber),
-                          ),
+                    Text(
+                      filterPengeluaran.isEmpty
+                          ? 'Total ${_daftarpengeluaran.length} Pengeluaran'
+                          : filterPengeluaran,
+                      style: const TextStyle(color: Colors.amber),
+                    ),
                     Row(
                       children: [
                         TextButton.icon(
@@ -932,15 +891,15 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                               }
                             },
                             label: Text(
-                              '$filterData',
-                              style: TextStyle(color: Colors.amber),
+                              filterData,
+                              style: const TextStyle(color: Colors.amber),
                             ),
                             icon: filterData == 'Filter Data : Semua'
-                                ? Icon(
+                                ? const Icon(
                                     Icons.filter_list,
                                     color: Colors.white,
                                   )
-                                : Icon(
+                                : const Icon(
                                     Icons.clear_rounded,
                                     color: Colors.red,
                                   )),
@@ -960,7 +919,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                               color: Colors.grey[800],
                               size: defaultPadding * 5,
                             ),
-                            SizedBox(height: defaultPadding),
+                            const SizedBox(height: defaultPadding),
                             Text(
                               'Belum ada Pengeluaran.  Keren!',
                               style: TextStyle(color: Colors.grey[500]),
@@ -976,31 +935,22 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                                       .toString()
                                       .contains('Rp ') ==
                                   true
-                              ? _daftarpengeluaran[index]['nominal']
-                                  .toString()
-                                  .replaceAll('Rp ', '')
+                              ? removerp(_daftarpengeluaran[index]['nominal'])
                               : _daftarpengeluaran[index]['nominal']
                                           .toString()
                                           .contains('Rp') ==
                                       true
-                                  ? _daftarpengeluaran[index]['nominal']
-                                      .toString()
-                                      .replaceAll('Rp', '')
+                                  ? removerpNospacing(
+                                      _daftarpengeluaran[index]['nominal'])
                                   : _daftarpengeluaran[index]['nominal'];
-                          // _daftarpengeluaran[index]['nominal']
-                          //     .toString()
-                          //     .replaceAll('Rp ', '');
 
                           Color colorValue;
 
                           if (int.parse(removedot(nominalSaja)) < 100000) {
-                            colorValue = Color.fromRGBO(231, 70, 70, 1);
+                            colorValue = const Color.fromRGBO(231, 70, 70, 1);
                           } else {
-                            colorValue = Color.fromRGBO(149, 1, 1, 1);
+                            colorValue = const Color.fromRGBO(149, 1, 1, 1);
                           }
-
-                          // print(
-                          //     'ini isi daftarnya${_daftarpengeluaran[index]}');
 
                           return Container(
                             decoration: BoxDecoration(
@@ -1010,32 +960,32 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                                 opacity: 15 / 100,
                                 image: _daftarpengeluaran[index]['tipe'] ==
                                         'Belanja Pribadi'
-                                    ? AssetImage(
+                                    ? const AssetImage(
                                         'assets/images/belanjapribadi.png')
                                     : _daftarpengeluaran[index]['tipe'] ==
                                             'Hiburan'
-                                        ? AssetImage(
+                                        ? const AssetImage(
                                             'assets/images/hiburan.png')
                                         : _daftarpengeluaran[index]['tipe'] ==
                                                 'Kesehatan'
-                                            ? AssetImage(
+                                            ? const AssetImage(
                                                 'assets/images/kesehatan.png')
                                             : _daftarpengeluaran[index]
                                                         ['tipe'] ==
                                                     'Lainnya'
-                                                ? AssetImage(
+                                                ? const AssetImage(
                                                     'assets/images/lainnya.png')
                                                 : _daftarpengeluaran[index]
                                                             ['tipe'] ==
                                                         'Makanan'
-                                                    ? AssetImage(
+                                                    ? const AssetImage(
                                                         'assets/images/makanan.png')
                                                     : _daftarpengeluaran[index]
                                                                 ['tipe'] ==
                                                             'Transportasi'
-                                                        ? AssetImage(
+                                                        ? const AssetImage(
                                                             'assets/images/transportasi.png')
-                                                        : AssetImage(
+                                                        : const AssetImage(
                                                             'assets/images/irlogonobg.png'),
                               ),
                               color: colorValue,
@@ -1050,26 +1000,26 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                             alignment: Alignment.center,
                             child: ListTile(
                               leading: Text('${index + 1}.',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white)),
                               title: Text(
                                 _daftarpengeluaran[index]['pengeluaran'],
-                                style: TextStyle(
+                                style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white),
                               ),
                               subtitle: Text(
                                 _daftarpengeluaran[index]['waktu'],
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 12,
                                   color: Colors.white,
                                 ),
                               ),
                               trailing: Text(
-                                '- ${currencyFormatter.format(int.parse(removedot(nominalSaja)))}',
-                                style: TextStyle(
+                                '- ${currencyFormatterRp.format(int.parse(removedot(nominalSaja)))}',
+                                style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                     color: Colors.white),
@@ -1112,7 +1062,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                                                     textAlign: TextAlign.right,
                                                     overflow:
                                                         TextOverflow.ellipsis,
-                                                    style: TextStyle(
+                                                    style: const TextStyle(
                                                       color: Colors.amber,
                                                     ),
                                                   ),
@@ -1130,11 +1080,11 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                                                       color: Colors.grey),
                                                 ),
                                                 Text(
-                                                  currencyFormatter.format(
+                                                  currencyFormatterRp.format(
                                                     int.parse(
                                                         removedot(nominalSaja)),
                                                   ),
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                       color: Colors.amber),
                                                 ),
                                               ],
@@ -1151,7 +1101,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                                                 ),
                                                 Text(
                                                   '${_daftarpengeluaran[index]['waktu']}',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                       color: Colors.amber),
                                                 ),
                                               ],
@@ -1168,7 +1118,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                                                 ),
                                                 Text(
                                                   '${_daftarpengeluaran[index]['tipe']}',
-                                                  style: TextStyle(
+                                                  style: const TextStyle(
                                                       color: Colors.amber),
                                                 ),
                                               ],
@@ -1194,7 +1144,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                                                               10),
                                                     ),
                                                   ),
-                                                  child: Icon(Icons.edit),
+                                                  child: const Icon(Icons.edit),
                                                   onPressed: () {
                                                     Navigator.of(context).pop();
                                                     showDialog(
@@ -1216,8 +1166,6 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                                                                       index]
                                                                   ['tipe']);
                                                         });
-                                                    print(
-                                                        'ini isinya $index ${_daftarpengeluaran[index]['id']} ');
                                                   },
                                                 ),
                                                 TextButton(
@@ -1232,9 +1180,8 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                                                               10),
                                                     ),
                                                   ),
-                                                  child: Icon(
+                                                  child: const Icon(
                                                       Icons.delete_forever),
-                                                  // const Text('Hapus'),
                                                   onPressed: () {
                                                     setState(() {
                                                       deletePengeluaran(

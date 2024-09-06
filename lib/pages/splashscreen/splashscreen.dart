@@ -1,8 +1,4 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:pengeluaran/main.dart';
-import 'package:pengeluaran/mainmenu.dart';
-import 'package:pengeluaran/pages/daftarpengeluaran/daftarpengeluaran.dart';
 import 'dart:async';
 
 import 'package:pengeluaran/pages/dashboard/dashboard.dart';
@@ -14,9 +10,9 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-void Main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(SplashScreen());
+  runApp(const SplashScreen());
 }
 
 class _SplashScreenState extends State<SplashScreen> {
@@ -26,8 +22,6 @@ class _SplashScreenState extends State<SplashScreen> {
     Timer(const Duration(seconds: 3), () {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (BuildContext context) => const Dashboard()),
-        // MaterialPageRoute(
-        //     builder: (BuildContext context) => const Daftarpengeluaran()),
       );
     });
   }
@@ -45,7 +39,7 @@ class _SplashScreenState extends State<SplashScreen> {
               width: 200,
               height: 200,
             ),
-            Text(
+            const Text(
               'CATAT PENGELUARAN BULANAN',
               style: TextStyle(
                   fontSize: 18,
@@ -53,9 +47,10 @@ class _SplashScreenState extends State<SplashScreen> {
                   fontFamily: 'Poppins',
                   fontWeight: FontWeight.bold),
             ),
-            Text('V1.0', style: TextStyle(fontSize: 10, color: Colors.white)),
-            SizedBox(height: 20),
-            CircularProgressIndicator(color: Colors.amber),
+            const Text('V1.0',
+                style: TextStyle(fontSize: 10, color: Colors.white)),
+            const SizedBox(height: 20),
+            const CircularProgressIndicator(color: Colors.amber),
           ],
         ),
       ),

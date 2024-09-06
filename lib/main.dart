@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:pengeluaran/pages/daftarpengeluaran/daftarpengeluaran.dart';
-import 'package:pengeluaran/pages/dashboard/dashboard.dart';
 import 'package:pengeluaran/pages/splashscreen/splashscreen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io';
@@ -18,7 +16,6 @@ bool isDesktop() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
