@@ -640,6 +640,7 @@ class _DashboardState extends State<Dashboard> {
   void refreshPage() {
     setState(() {
       getPendapatan();
+      getPengeluaran();
     });
   }
 
@@ -674,137 +675,155 @@ class _DashboardState extends State<Dashboard> {
                             Row(
                               children: [
                                 IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const Dashboard(),
-                                          ),
-                                        );
-                                      });
-                                    },
+                                    onPressed: () {},
                                     icon: Icon(
-                                      Icons.refresh,
+                                      Icons.edit_calendar_rounded,
                                       color: Colors.white,
                                     )),
-                                Text(
-                                  'Pengeluaran ',
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 16),
-                                ),
-                                Text(
-                                  '${(DateFormat('MMMM yyyy').format(DateTime.now()))}',
-                                  style: TextStyle(
-                                      color: Colors.amber,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold),
+                                Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('Pengeluaran ',
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 12)),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          '${(DateFormat('MMMM yyyy').format(DateTime.now()))}',
+                                          style: TextStyle(
+                                              color: Colors.amber,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                    // SizedBox(width: defaultPadding / 2),
+                                  ],
                                 ),
                               ],
                             ),
-                            IconButton(
-                              onPressed: () {
-                                showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        contentPadding: const EdgeInsets.all(
-                                            defaultPadding / 2),
-                                        backgroundColor: Colors.grey[900],
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                        icon: const Icon(
-                                          Icons.menu_rounded,
-                                          color: Colors.amber,
-                                          size: 50,
-                                        ),
-                                        title: const Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            SizedBox(
-                                              width: defaultPadding / 2,
+                            Row(
+                              children: [
+                                IconButton(
+                                    onPressed: () {
+                                      refreshPage();
+                                    },
+                                    icon: const Icon(
+                                      Icons.replay_circle_filled_outlined,
+                                      color: Colors.white,
+                                    )),
+                                IconButton(
+                                  onPressed: () {
+                                    showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            contentPadding:
+                                                const EdgeInsets.all(
+                                                    defaultPadding / 2),
+                                            backgroundColor: Colors.grey[900],
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                             ),
-                                            Text(
-                                              'Daftar Menu',
+                                            icon: const Icon(
+                                              Icons.menu_rounded,
+                                              color: Colors.amber,
+                                              size: 50,
                                             ),
-                                          ],
-                                        ),
-                                        titleTextStyle: const TextStyle(
-                                          color: Colors.amber,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 20,
-                                        ),
-                                        content: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            TextButton.icon(
-                                                onPressed: () {
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          const Dashboard(),
+                                            title: const Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                SizedBox(
+                                                  width: defaultPadding / 2,
+                                                ),
+                                                Text(
+                                                  'Daftar Menu',
+                                                ),
+                                              ],
+                                            ),
+                                            titleTextStyle: const TextStyle(
+                                              color: Colors.amber,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 20,
+                                            ),
+                                            content: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                TextButton.icon(
+                                                    onPressed: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              const Dashboard(),
+                                                        ),
+                                                      );
+                                                    },
+                                                    label: Text(
+                                                      'Beranda',
+                                                      style: TextStyle(
+                                                          color: Colors.white),
                                                     ),
-                                                  );
-                                                },
-                                                label: Text(
-                                                  'Beranda',
-                                                  style: TextStyle(
+                                                    icon: Icon(
+                                                        Icons.home_rounded,
+                                                        color: Colors.white)),
+                                                TextButton.icon(
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            const Daftarpengeluaran(),
+                                                      ),
+                                                    ).then(
+                                                      (_) {
+                                                        getPengeluaran();
+                                                        refreshPage();
+                                                      },
+                                                    );
+                                                  },
+                                                  label: const Text(
+                                                    'Daftar Pengeluaran',
+                                                    style: TextStyle(
+                                                        color: Colors.white),
+                                                  ),
+                                                  icon: const Icon(
+                                                      Icons.menu_book_rounded,
                                                       color: Colors.white),
                                                 ),
-                                                icon: Icon(Icons.home_rounded,
-                                                    color: Colors.white)),
-                                            TextButton.icon(
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        const Daftarpengeluaran(),
-                                                  ),
-                                                ).then(
-                                                  (_) {
-                                                    getPengeluaran();
-                                                    refreshPage();
-                                                  },
-                                                );
-                                              },
-                                              label: const Text(
-                                                'Daftar Pengeluaran',
-                                                style: TextStyle(
-                                                    color: Colors.white),
-                                              ),
-                                              icon: const Icon(
-                                                  Icons.menu_book_rounded,
-                                                  color: Colors.white),
+                                                TextButton.icon(
+                                                    onPressed: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                    label: Text(
+                                                      'Menu Mendatang',
+                                                      style: TextStyle(
+                                                          color:
+                                                              Colors.grey[700]),
+                                                    ),
+                                                    icon: Icon(
+                                                        Icons.commit_rounded,
+                                                        color:
+                                                            Colors.grey[700])),
+                                              ],
                                             ),
-                                            TextButton.icon(
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                                label: Text(
-                                                  'Menu Mendatang',
-                                                  style: TextStyle(
-                                                      color: Colors.grey[700]),
-                                                ),
-                                                icon: Icon(Icons.commit_rounded,
-                                                    color: Colors.grey[700])),
-                                          ],
-                                        ),
-                                      );
-                                    });
-                              },
-                              icon: const Icon(
-                                Icons.menu,
-                                size: 32,
-                                color: Colors.amber,
-                              ),
+                                          );
+                                        });
+                                  },
+                                  icon: const Icon(
+                                    Icons.menu,
+                                    size: 32,
+                                    color: Colors.amber,
+                                  ),
+                                ),
+                              ],
                             )
                           ],
                         ),
