@@ -9,7 +9,6 @@ import 'package:pengeluaran/static/static.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pengeluaran.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:pengeluaran/widgets/mywidget.dart';
-// import 'package:sqflite/sqflite.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -132,12 +131,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
     pengeluaranBulanan = 0;
 
     for (var i = 0; i < dataPengeluaran.length; i++) {
-      var cekRp = dataPengeluaran[i]['nominal'].toString().contains('Rp ') ==
-              true
-          ? dataPengeluaran[i]['nominal'].toString().replaceAll('Rp ', '')
-          : dataPengeluaran[i]['nominal'].toString().contains('Rp') == true
-              ? dataPengeluaran[i]['nominal'].toString().replaceAll('Rp', '')
-              : dataPengeluaran[i]['nominal'];
+      var cekRp = cekContainRp(dataPengeluaran[i]['nominal']);
 
       var pengeluarannya = int.parse(
         removedot(cekRp),
@@ -146,10 +140,10 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
       totalPengeluaran = totalPengeluaran + pengeluarannya;
 
       DateTime waktuPengeluaran =
-          DateFormat('EEEE dd MMMM yyyy').parse(dataPengeluaran[i]['waktu']);
+          parsingDateFormat(dataPengeluaran[i]['waktu']);
 
       var bulanIni = bulanSekarang();
-      var waktuPengeluarannya = DateFormat('MMMM').format(waktuPengeluaran);
+      var waktuPengeluarannya = dtFormatMMMM(waktuPengeluaran.toString());
 
       if (waktuPengeluarannya == bulanIni) {
         pengeluaranBulanan = pengeluaranBulanan + pengeluarannya;

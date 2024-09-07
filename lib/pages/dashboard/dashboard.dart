@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_file.dart';
 import 'package:pengeluaran/charts/lineChart_PengeluaranPerBulan.dart';
 import 'package:pengeluaran/charts/pieChart_TipePengeluaran.dart';
+import 'package:pengeluaran/function/functions.dart';
 import 'package:pengeluaran/pages/daftarpengeluaran/daftarpengeluaran.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pengeluaran.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pendapatan.dart';
@@ -16,14 +17,23 @@ class Dashboard extends StatefulWidget {
   State<Dashboard> createState() => _DashboardState();
 }
 
+var pengeluaranBulanan = 0;
 var totalPengeluaranBulanan = 0;
 var totalPengeluaranBulananAkhir = 0;
 var totalPendapatanBulanan = 0;
+var bulanPengeluaran = dtFormatMMMMyyyy(DateTime.now());
+
+void cleanPengeluaran() {
+  pengeluaranBulanan = 0;
+  totalPengeluaranBulanan = 0;
+  totalPengeluaranBulananAkhir = 0;
+  totalPendapatanBulanan = 0;
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id', '');
-  runApp(Dashboard());
+  runApp(const Dashboard());
 }
 
 final db = DatabaseHelper.instance;
@@ -42,8 +52,7 @@ class _DashboardState extends State<Dashboard> {
   @override
   void initState() {
     setState(() {
-      totalPengeluaranBulanan = 0;
-      totalPendapatanBulanan = 0;
+      cleanPengeluaran();
       getPengeluaran();
       getPendapatan();
     });
@@ -160,25 +169,23 @@ class _DashboardState extends State<Dashboard> {
   }
 
   Future<void> getPengeluaran() async {
-    totalPengeluaranBulanan = 0;
+    cleanPengeluaran();
     List<Map<String, dynamic>> dataPengeluaran = await db.queryAll('', '');
 
     for (var i = 0; i < dataPengeluaran.length; i++) {
-      var cekRp = dataPengeluaran[i]['nominal'].toString().contains('Rp ') ==
-              true
-          ? dataPengeluaran[i]['nominal'].toString().replaceAll('Rp ', '')
-          : dataPengeluaran[i]['nominal'].toString().contains('Rp') == true
-              ? dataPengeluaran[i]['nominal'].toString().replaceAll('Rp', '')
-              : dataPengeluaran[i]['nominal'];
+      var cekRp = cekContainRp(dataPengeluaran[i]['nominal']);
+      var pengeluarannya = int.parse(removedot(cekRp));
 
-      var pengeluarannya = int.parse(
-        cekRp.toString().replaceAll('.', ''),
-      );
+      if (dtFormatMMMM(parsingDateFormat(dataPengeluaran[i]['waktu'])) ==
+          bulanSekarang()) {
+        pengeluaranBulanan = pengeluaranBulanan + pengeluarannya;
+      }
+
       totalPengeluaranBulanan = totalPengeluaranBulanan + pengeluarannya;
     }
 
     setState(() {
-      totalPengeluaranBulananAkhir = totalPengeluaranBulanan;
+      totalPengeluaranBulananAkhir = pengeluaranBulanan;
     });
   }
 
@@ -900,7 +907,7 @@ class _DashboardState extends State<Dashboard> {
                               children: [
                                 const Text('Pengeluaran ',
                                     style: TextStyle(color: Colors.grey)),
-                                totalPengeluaranBulanan == 0
+                                totalPengeluaranBulananAkhir == 0
                                     ? Row(
                                         children: [
                                           IconButton(
@@ -959,7 +966,7 @@ class _DashboardState extends State<Dashboard> {
                                             width: defaultPadding / 2,
                                           ),
                                           Text(
-                                            '${currencyFormatter.format(totalPengeluaranBulanan)}',
+                                            '${currencyFormatter.format(totalPengeluaranBulananAkhir)}',
                                             style: TextStyle(
                                                 color: Colors.red,
                                                 fontWeight: FontWeight.bold,

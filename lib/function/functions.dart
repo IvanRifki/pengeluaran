@@ -21,3 +21,24 @@ NumberFormat currencyFormatterRp = NumberFormat.currency(
 bulanSekarang() {
   return DateFormat('MMMM').format(DateTime.now());
 }
+
+parsingDateFormat(String dateData) {
+  //untuk ubah data string menjadi tipe datetime
+  return DateFormat('EEEE dd MMMM yyyy').parse(dateData);
+}
+
+dtFormatMMMM(dateData) {
+  return DateFormat('MMMM').format(dateData);
+}
+
+dtFormatMMMMyyyy(dateData) {
+  return DateFormat('MMMM yyyy').format(dateData);
+}
+
+cekContainRp(nominal) {
+  return nominal.toString().contains('Rp ') == true
+      ? nominal.toString().replaceAll('Rp ', '')
+      : nominal.toString().contains('Rp') == true
+          ? nominal.toString().replaceAll('Rp', '')
+          : nominal;
+}
