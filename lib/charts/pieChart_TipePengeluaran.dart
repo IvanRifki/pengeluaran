@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pengeluaran.dart';
 import 'package:pengeluaran/function/functions.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class PieChartTipePengeluaran extends StatefulWidget {
-  const PieChartTipePengeluaran({super.key});
+  DateTime? waktuPengeluaran;
+  PieChartTipePengeluaran(this.waktuPengeluaran, {super.key});
 
   @override
   State<PieChartTipePengeluaran> createState() =>
@@ -22,16 +24,22 @@ class PieChartData {
 }
 
 List<PieChartData> pieChartData = [];
+DateTime? waktuPengeluaran;
 
 class _PieChartTipePengeluaranState extends State<PieChartTipePengeluaran> {
   @override
   void initState() {
     super.initState();
-    getPieChartData();
+    getPieChartData(widget.waktuPengeluaran);
   }
 
-  Future<void> getPieChartData() async {
-    final data = await db.queryPieChartByType(DateTime.now().month);
+  Future<void> getPieChartData(waktuPengeluaran) async {
+    print(
+        'ini waktu pengeluaran ${DateFormat('M').format(waktuPengeluaran)} ini datemonth ${DateTime.now().month}');
+
+    waktuPengeluaran = waktuPengeluaran ?? DateTime.now().month;
+
+    final data = await db.queryPieChartByType(waktuPengeluaran);
     num totalnominal = data.fold(0,
         (sum, item) => sum + num.parse(removedot(removerp(item['nominal']))));
 

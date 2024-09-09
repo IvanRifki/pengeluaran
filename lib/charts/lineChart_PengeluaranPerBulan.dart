@@ -6,7 +6,8 @@ import 'package:pengeluaran/function/functions.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class LineChartPengeluaranPerBulan extends StatefulWidget {
-  const LineChartPengeluaranPerBulan({super.key});
+  DateTime? waktuPengeluaran;
+  LineChartPengeluaranPerBulan(this.waktuPengeluaran, {super.key});
 
   @override
   State<LineChartPengeluaranPerBulan> createState() =>
@@ -16,6 +17,7 @@ class LineChartPengeluaranPerBulan extends StatefulWidget {
 final db = DatabaseHelper.instance;
 
 List<LineChartData> _chartdata = [];
+DateTime? waktuPengeluaran;
 
 class LineChartData {
   LineChartData(this.total, this.waktu);
@@ -28,12 +30,18 @@ class _LineChartPengeluaranPerBulanState
   @override
   void initState() {
     super.initState();
-    getChartData();
+    getChartData(widget.waktuPengeluaran);
   }
 
-  Future<void> getChartData() async {
+  Future<void> getChartData(waktuPengeluaran) async {
+    waktuPengeluaran = waktuPengeluaran ?? DateTime.now().month;
+
     final bulanini = bulanSekarang();
-    final data = await db.queryLineChartPengeluaran(bulanini);
+    print(
+        'ini ada di linechart ${dtFormatMMMM(waktuPengeluaran)} ini datemonth ${DateTime.now().month} ini bulansekarang $bulanini ');
+
+    final data =
+        await db.queryLineChartPengeluaran(dtFormatMMMM(waktuPengeluaran));
     _chartdata.clear();
 
     if (data.isNotEmpty) {

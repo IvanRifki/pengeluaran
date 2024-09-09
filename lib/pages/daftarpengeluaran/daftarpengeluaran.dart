@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
-// import 'package:pengeluaran/charts/pieChart_TipePengeluaran.dart';
 import 'package:pengeluaran/function/functions.dart';
 import 'package:pengeluaran/static/static.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pengeluaran.dart';
@@ -19,12 +17,13 @@ class Daftarpengeluaran extends StatefulWidget {
   const Daftarpengeluaran({super.key});
 
   @override
-  State<Daftarpengeluaran> createState() => _DaftarpengeluaranState();
+  State<Daftarpengeluaran> createState() => _daftarPengeluaranState();
 }
 
-class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
+class _daftarPengeluaranState extends State<Daftarpengeluaran> {
   final db = DatabaseHelper.instance;
-  List<Map<String, dynamic>> _daftarpengeluaran = [];
+  List<Map<String, dynamic>> _daftarPengeluaran = [];
+  List<Map<String, dynamic>> _daftarPengeluaranBulanan = [];
   DateTime? selectedDate;
   final formKey = GlobalKey<FormState>();
   String? dropdownValue;
@@ -40,6 +39,8 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
   Color colorValue = const Color.fromRGBO(100, 100, 100, 1);
 
   var filterPengeluaran = '';
+  var bulanPilihan = '';
+  var bulanIni = bulanSekarang();
 
   List<String> ddlItemTipePengeluaran = [
     'Belanja Pribadi',
@@ -79,7 +80,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
     try {
       await DatabaseHelper.instance.insert(row);
 
-      _daftarpengeluaran;
+      _daftarPengeluaran;
       setState(() {});
     } catch (e) {
       print('ada error ini bang $e');
@@ -101,7 +102,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
       print('ada ini bang $e');
     }
     setState(() {
-      _daftarpengeluaran;
+      _daftarPengeluaran;
     });
   }
 
@@ -114,6 +115,8 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
   }
 
   Future<void> getPengeluaran(tipenya, sortnya) async {
+    _daftarPengeluaranBulanan = [];
+
     if (tipenya == '' && sortnya == '') {
       filterData = 'Filter Data : Semua';
     } else if (tipenya == '' && sortnya != '') {
@@ -143,26 +146,47 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
       DateTime waktuPengeluaran =
           parsingDateFormat(dataPengeluaran[i]['waktu']);
 
-      var bulanIni = bulanSekarang();
+      // var bulanIni = bulanSekarang();
       var waktuPengeluarannya = dtFormatMMMM(waktuPengeluaran);
 
-      if (waktuPengeluarannya == bulanIni) {
+      // ini untuk ubah datanya berdasarkan bulan
+      // bulanPilihan = DateFormat('MMMM').format(DateTime(2024, 8));
+
+      if (waktuPengeluarannya ==
+          (bulanPilihan == '' ? bulanIni : bulanPilihan)) {
         pengeluaranBulanan = pengeluaranBulanan + pengeluarannya;
+        _daftarPengeluaranBulanan.add(dataPengeluaran[i]);
       } else {
         pengeluaranBulanan = pengeluaranBulanan;
       }
     }
 
     setState(() {
-      _daftarpengeluaran = dataPengeluaran;
+      // wkwkwk
+      // _daftarPengeluaran = dataPengeluaran;
+      _daftarPengeluaran = _daftarPengeluaranBulanan;
     });
   }
 
   Future<void> getPengeluaranByName(namaPengeluaran) async {
+    _daftarPengeluaranBulanan = [];
     List<Map<String, dynamic>> dataPengeluaran =
         await db.queryAllByPengeluaran(namaPengeluaran);
+
+    for (var i = 0; i < dataPengeluaran.length; i++) {
+      DateTime waktuPengeluaran =
+          parsingDateFormat(dataPengeluaran[i]['waktu']);
+
+      var waktuPengeluarannya = dtFormatMMMM(waktuPengeluaran);
+
+      if (waktuPengeluarannya ==
+          (bulanPilihan == '' ? bulanIni : bulanPilihan)) {
+        _daftarPengeluaranBulanan.add(dataPengeluaran[i]);
+      } else {}
+    }
+
     setState(() {
-      _daftarpengeluaran = dataPengeluaran;
+      _daftarPengeluaran = _daftarPengeluaranBulanan;
     });
   }
 
@@ -172,37 +196,8 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
   }
 
   Future<void> selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.amber,
-              onPrimary: Colors.black,
-              onSurface: Colors.grey,
-              surface: Colors.grey[900]!,
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.grey, // button text color
-              ),
-            ),
-          ),
-          child: child!,
-        );
-      },
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2015, 8),
-      lastDate: DateTime(2101),
-      cancelText: 'Batal',
-      confirmText: 'Pilih',
-      helpText: 'Pilih tanggal pengeluaran.',
-      fieldLabelText: 'Pilih Tanggal',
-      fieldHintText: 'Pilih Tanggal',
-      errorFormatText: 'Format Tanggal Tidak Sesuai.',
-      errorInvalidText: 'Pilih Tanggal Yang Valid.',
-    );
+    final DateTime? picked = await showDatePickerCustom(context);
+
     if (picked != null && picked != selectedDate) {
       setState(() {
         waktuPengeluaranController.text =
@@ -742,7 +737,6 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                         ),
                         onPressed: () {
                           if (mounted) {
-                            // Navigator.pop(context, true);
                             Navigator.pop(context);
                           }
                         },
@@ -762,6 +756,32 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                       ),
                     ],
                   ),
+                  Row(children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.add_circle,
+                        size: 32,
+                        color: Colors.amber,
+                      ),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.grey[800],
+                      ),
+                      tooltip: 'Tambah Pengeluaran',
+                      onPressed: () {
+                        namaPengeluaranController.clear();
+                        nominalPengeluaranController.clear();
+                        waktuPengeluaranController.clear();
+
+                        tipePengeluaranController.text = 'Pengeluaran';
+
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return popupTambahPengeluaran();
+                            });
+                      },
+                    ),
+                  ])
                 ],
               ),
             ),
@@ -772,60 +792,45 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          const Text(
-                            'Total Pengeluaran ',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          Text(
-                            DateFormat('MMMM yyyy')
-                                .format(DateTime.now().toLocal()),
-                            style: const TextStyle(color: Colors.amber),
-                          ),
-                        ],
+                      const Text(
+                        'Total Pengeluaran',
+                        style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
                       Text(
                         currencyFormatterRp.format(pengeluaranBulanan),
                         style: const TextStyle(
-                            color: Colors.amber,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20),
+                          color: Colors.amber,
+                          fontWeight: FontWeight.bold,
+                          fontSize: defaultPadding,
+                        ),
                       ),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.add_circle,
-                      size: 32,
-                      color: Colors.amber,
-                    ),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.grey[800],
-                    ),
-                    tooltip: 'Tambah Pengeluaran',
-                    onPressed: () {
-                      namaPengeluaranController.clear();
-                      nominalPengeluaranController.clear();
-                      waktuPengeluaranController.clear();
-
-                      tipePengeluaranController.text = 'Pengeluaran';
-
-                      showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return popupTambahPengeluaran();
-                          });
-                    },
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      const Text(
+                        'Selama Bulan',
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                      Text(
+                        DateFormat('MMMM yyyy')
+                            .format(DateTime.now().toLocal()),
+                        style: const TextStyle(
+                          color: Colors.amber,
+                          fontSize: defaultPadding,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            // const SizedBox(
-            //   height: defaultPadding,
-            // ),
             Container(
               padding: const EdgeInsets.only(
                 top: defaultPadding / 2,
@@ -875,7 +880,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                   children: [
                     Text(
                       filterPengeluaran.isEmpty
-                          ? 'Total ${_daftarpengeluaran.length} Pengeluaran'
+                          ? 'Total ${_daftarPengeluaran.length} Pengeluaran'
                           : filterPengeluaran,
                       style: const TextStyle(color: Colors.amber),
                     ),
@@ -913,7 +918,7 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
             ),
             Expanded(
               child: Container(
-                child: _daftarpengeluaran.isEmpty
+                child: _daftarPengeluaran.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -933,12 +938,12 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                       )
                     : ListView.builder(
                         shrinkWrap: true,
-                        itemCount: _daftarpengeluaran.length,
+                        itemCount: _daftarPengeluaran.length,
                         itemBuilder: (context, index) {
                           var nominalSaja = cekContainRp(
-                              _daftarpengeluaran[index]['nominal']);
+                              _daftarPengeluaran[index]['nominal']);
                           print(
-                              'ini isinya ${imageCardPengeluaran(_daftarpengeluaran[index]['tipe'])}');
+                              'ini isinya ${imageCardPengeluaran(_daftarPengeluaran[index]['tipe'])}');
                           return Container(
                             decoration: BoxDecoration(
                                 image: DecorationImage(
@@ -946,37 +951,50 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                                   alignment: Alignment.centerRight,
                                   opacity: 15 / 100,
                                   image: AssetImage(imageCardPengeluaran(
-                                      _daftarpengeluaran[index]['tipe'])),
+                                      _daftarPengeluaran[index]['tipe'])),
                                 ),
                                 color: cardColorValue(removedot(nominalSaja)),
                                 borderRadius:
                                     BorderRadius.circular(defaultPadding / 2)),
                             height: 80,
-                            padding: const EdgeInsets.all(10),
                             margin: const EdgeInsets.only(
                                 left: defaultPadding,
                                 right: defaultPadding,
                                 bottom: defaultPadding / 2),
-                            child: Center(
-                              child: ListTile(
-                                horizontalTitleGap: 0,
-                                leading: Text('${index + 1}.',
+                            child: ListTile(
+                              horizontalTitleGap: 0,
+                              leading: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius:
+                                      BorderRadius.circular(defaultPadding / 2),
+                                ),
+                                child: Container(
+                                  decoration: BoxDecoration(),
+                                  child: Text(
+                                    '${index + 1}.',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
-                                    )),
-                                title: Column(
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              title: Container(
+                                height: defaultPadding * 3,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      _daftarpengeluaran[index]['pengeluaran'],
+                                      _daftarPengeluaran[index]['pengeluaran'],
                                       style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                     Text(
-                                      _daftarpengeluaran[index]['waktu'],
+                                      _daftarPengeluaran[index]['waktu'],
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: Colors.white,
@@ -984,205 +1002,191 @@ class _DaftarpengeluaranState extends State<Daftarpengeluaran> {
                                     ),
                                   ],
                                 ),
-                                // subtitle:
-                                // Text(
-                                //   _daftarpengeluaran[index]['waktu'],
-                                //   style: const TextStyle(
-                                //     fontSize: 12,
-                                //     color: Colors.white,
-                                //   ),
-                                // ),
-                                trailing: Text(
-                                  '- ${currencyFormatterRp.format(int.parse(removedot(nominalSaja)))}',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                      color: Colors.white),
-                                ),
-                                onTap: () {
-                                  showDialog(
-                                    barrierDismissible: true,
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return PopScope(
-                                        canPop: true,
-                                        child: AlertDialog(
-                                          backgroundColor: Colors.grey[900],
-                                          title: const Center(
-                                            child: Text(
-                                              'Rincian Pengeluaran',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.amber),
-                                            ),
+                              ),
+                              trailing: Text(
+                                '- ${currencyFormatterRp.format(int.parse(removedot(nominalSaja)))}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: Colors.white),
+                              ),
+                              onTap: () {
+                                showDialog(
+                                  barrierDismissible: true,
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return PopScope(
+                                      canPop: true,
+                                      child: AlertDialog(
+                                        backgroundColor: Colors.grey[900],
+                                        title: const Center(
+                                          child: Text(
+                                            'Rincian Pengeluaran',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.amber),
                                           ),
-                                          content: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  const Text(
-                                                    'Pengeluaran : ',
-                                                    style: TextStyle(
-                                                        color: Colors.grey),
-                                                  ),
-                                                  Expanded(
-                                                    child: Text(
-                                                      '${_daftarpengeluaran[index]['pengeluaran']}',
-                                                      textAlign:
-                                                          TextAlign.right,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      style: const TextStyle(
-                                                        color: Colors.amber,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  const Text(
-                                                    'Nominal : ',
-                                                    style: TextStyle(
-                                                        color: Colors.grey),
-                                                  ),
-                                                  Text(
-                                                    currencyFormatterRp.format(
-                                                      int.parse(removedot(
-                                                          nominalSaja)),
-                                                    ),
-                                                    style: const TextStyle(
-                                                        color: Colors.amber),
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  const Text(
-                                                    'Waktu : ',
-                                                    style: TextStyle(
-                                                        color: Colors.grey),
-                                                  ),
-                                                  Text(
-                                                    '${_daftarpengeluaran[index]['waktu']}',
-                                                    style: const TextStyle(
-                                                        color: Colors.amber),
-                                                  ),
-                                                ],
-                                              ),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  const Text(
-                                                    'Tipe : ',
-                                                    style: TextStyle(
-                                                        color: Colors.grey),
-                                                  ),
-                                                  Text(
-                                                    '${_daftarpengeluaran[index]['tipe']}',
-                                                    style: const TextStyle(
-                                                        color: Colors.amber),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                          actions: <Widget>[
+                                        ),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
                                             Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  TextButton(
-                                                    style: TextButton.styleFrom(
-                                                      foregroundColor:
-                                                          Colors.white,
-                                                      backgroundColor:
-                                                          Colors.grey,
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10),
-                                                      ),
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                const Text(
+                                                  'Pengeluaran : ',
+                                                  style: TextStyle(
+                                                      color: Colors.grey),
+                                                ),
+                                                Expanded(
+                                                  child: Text(
+                                                    '${_daftarPengeluaran[index]['pengeluaran']}',
+                                                    textAlign: TextAlign.right,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                      color: Colors.amber,
                                                     ),
-                                                    child:
-                                                        const Icon(Icons.edit),
-                                                    onPressed: () {
-                                                      Navigator.of(context)
-                                                          .pop();
-                                                      showDialog(
-                                                          context: context,
-                                                          builder: (context) {
-                                                            return popupEditPengeluaran(
-                                                                _daftarpengeluaran[
-                                                                        index]
-                                                                    ['id'],
-                                                                _daftarpengeluaran[
-                                                                        index][
-                                                                    'pengeluaran'],
-                                                                _daftarpengeluaran[
-                                                                        index]
-                                                                    ['nominal'],
-                                                                _daftarpengeluaran[
-                                                                        index]
-                                                                    ['waktu'],
-                                                                _daftarpengeluaran[
-                                                                        index]
-                                                                    ['tipe']);
-                                                          });
-                                                    },
                                                   ),
-                                                  TextButton(
-                                                    style: TextButton.styleFrom(
-                                                      foregroundColor:
-                                                          Colors.white,
-                                                      backgroundColor:
-                                                          Colors.red,
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10),
-                                                      ),
-                                                    ),
-                                                    child: const Icon(
-                                                        Icons.delete_forever),
-                                                    onPressed: () {
-                                                      setState(() {
-                                                        deletePengeluaran(
-                                                            _daftarpengeluaran[
-                                                                index]['id']);
-                                                      });
-                                                      Navigator.of(context)
-                                                          .pop();
-                                                      showAndCloseDialog(
-                                                          'Dihapus',
-                                                          'Pengeluaran Berhasil Dihapus!');
-                                                    },
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                const Text(
+                                                  'Nominal : ',
+                                                  style: TextStyle(
+                                                      color: Colors.grey),
+                                                ),
+                                                Text(
+                                                  currencyFormatterRp.format(
+                                                    int.parse(
+                                                        removedot(nominalSaja)),
                                                   ),
-                                                ]),
+                                                  style: const TextStyle(
+                                                      color: Colors.amber),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                const Text(
+                                                  'Waktu : ',
+                                                  style: TextStyle(
+                                                      color: Colors.grey),
+                                                ),
+                                                Text(
+                                                  '${_daftarPengeluaran[index]['waktu']}',
+                                                  style: const TextStyle(
+                                                      color: Colors.amber),
+                                                ),
+                                              ],
+                                            ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                const Text(
+                                                  'Tipe : ',
+                                                  style: TextStyle(
+                                                      color: Colors.grey),
+                                                ),
+                                                Text(
+                                                  '${_daftarPengeluaran[index]['tipe']}',
+                                                  style: const TextStyle(
+                                                      color: Colors.amber),
+                                                ),
+                                              ],
+                                            ),
                                           ],
                                         ),
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
+                                        actions: <Widget>[
+                                          Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                TextButton(
+                                                  style: TextButton.styleFrom(
+                                                    foregroundColor:
+                                                        Colors.white,
+                                                    backgroundColor:
+                                                        Colors.grey,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                    ),
+                                                  ),
+                                                  child: const Icon(Icons.edit),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                    showDialog(
+                                                        context: context,
+                                                        builder: (context) {
+                                                          return popupEditPengeluaran(
+                                                              _daftarPengeluaran[
+                                                                  index]['id'],
+                                                              _daftarPengeluaran[
+                                                                      index][
+                                                                  'pengeluaran'],
+                                                              _daftarPengeluaran[
+                                                                      index]
+                                                                  ['nominal'],
+                                                              _daftarPengeluaran[
+                                                                      index]
+                                                                  ['waktu'],
+                                                              _daftarPengeluaran[
+                                                                      index]
+                                                                  ['tipe']);
+                                                        });
+                                                  },
+                                                ),
+                                                TextButton(
+                                                  style: TextButton.styleFrom(
+                                                    foregroundColor:
+                                                        Colors.white,
+                                                    backgroundColor: Colors.red,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                    ),
+                                                  ),
+                                                  child: const Icon(
+                                                      Icons.delete_forever),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      deletePengeluaran(
+                                                          _daftarPengeluaran[
+                                                              index]['id']);
+                                                    });
+                                                    Navigator.of(context).pop();
+                                                    showAndCloseDialog(
+                                                        'Dihapus',
+                                                        'Pengeluaran Berhasil Dihapus!');
+                                                  },
+                                                ),
+                                              ]),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
                             ),
                           );
                         }),

@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_file.dart';
@@ -9,6 +10,8 @@ import 'package:pengeluaran/databasehelper/dbhelper_pengeluaran.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pendapatan.dart';
 import 'package:pengeluaran/static/static.dart';
 import 'package:pengeluaran/widgets/mywidget.dart';
+// import 'package:month_picker_dialog/month_picker_dialog.dart';
+import 'package:cherry_toast/cherry_toast.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -39,6 +42,10 @@ void main() async {
 final db = DatabaseHelper.instance;
 final dbPendapatan = DatabaseHelperPendapatan.instance;
 DateTime? selectedDate;
+DateTime? selectedMonthPengeluaran = DateFormat('MMMM yyyy')
+    .parse(DateFormat('MMMM yyyy').format(DateTime.now()));
+// DateTime(DateTime.now().year, DateTime.now().month);
+// parsingDateFormatMY(bulanTahunSekarang());
 
 List<Map<String, dynamic>> _daftarpendapatan = [];
 
@@ -53,7 +60,10 @@ class _DashboardState extends State<Dashboard> {
   void initState() {
     setState(() {
       cleanPengeluaran();
-      getPengeluaran();
+      getPengeluaran(
+        // selectedMonthPengeluaran ?? dtFormatMMMMyyyy(DateTime.now()),
+        selectedMonthPengeluaran,
+      );
       getPendapatan();
     });
     super.initState();
@@ -82,22 +92,15 @@ class _DashboardState extends State<Dashboard> {
       totalPendapatanBulanan = 0;
     } else {
       for (var i = 0; i < dataPendapatan.length; i++) {
-        var cekRpPendapatan = dataPendapatan[i]['nominal']
-                    .toString()
-                    .contains('Rp ') ==
-                true
-            ? dataPendapatan[i]['nominal'].toString().replaceAll('Rp ', '')
-            : dataPendapatan[i]['nominal'].toString().contains('Rp') == true
-                ? dataPendapatan[i]['nominal'].toString().replaceAll('Rp', '')
-                : dataPendapatan[i]['nominal'];
+        var cekRpPendapatan = cekContainRp(dataPendapatan[i]['nominal']);
 
         var pendapatannya = int.parse(cekRpPendapatan);
 
         DateTime waktuPendapatan =
-            DateFormat('EEEE dd MMMM yyyy').parse(dataPendapatan[i]['waktu']);
+            parsingDateFormat(dataPendapatan[i]['waktu']);
 
-        var bulanIni = DateFormat('MMMM').format(DateTime.now());
-        var waktuPendapatannya = DateFormat('MMMM').format(waktuPendapatan);
+        var bulanIni = bulanSekarang();
+        var waktuPendapatannya = dtFormatMMMM(waktuPendapatan);
 
         if (waktuPendapatannya == bulanIni) {
           setState(() {
@@ -108,38 +111,25 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 
-  Future<void> selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.amber,
-              onPrimary: Colors.black,
-              onSurface: Colors.grey,
-              surface: Colors.grey[900]!,
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.grey,
-              ),
-            ),
-          ),
-          child: child!,
-        );
-      },
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2015, 8),
-      lastDate: DateTime(2101),
-      cancelText: 'Batal',
-      confirmText: 'Pilih',
-      helpText: 'Pilih tanggal pengeluaran.',
-      fieldLabelText: 'Pilih Tanggal',
-      fieldHintText: 'Pilih Tanggal',
-      errorFormatText: 'Format Tanggal Tidak Sesuai.',
-      errorInvalidText: 'Pilih Tanggal Yang Valid.',
-    );
+  Future selectMonth(BuildContext context) async {
+    final DateTime? picked = await showMonthPickerCustom(context);
+    if (picked != null && picked != selectedDate) {
+      setState(
+        () {
+          selectedMonthPengeluaran =
+              parsingDateFormatMY(dtFormatMMMMyyyy(picked));
+          refreshPage();
+        },
+      );
+      // print(
+      //     'ini bulannya ${DateFormat('MMMM yyyy').format(selectedMonthPengeluaran!)}');
+
+      return DateFormat('MMMM yyyy').format(selectedMonthPengeluaran!);
+    }
+  }
+
+  Future<void> selectDatePendapatan(BuildContext context) async {
+    final DateTime? picked = await showDatePickerCustom(context);
     if (picked != null && picked != selectedDate) {
       setState(() {
         waktuPendapatanController.text =
@@ -168,28 +158,77 @@ class _DashboardState extends State<Dashboard> {
     });
   }
 
-  Future<void> getPengeluaran() async {
+  Future<void> getPengeluaran(waktuPengeluaran) async {
+    print('ini di getpengeluaran ${dtFormatMMMMyyyy(waktuPengeluaran)}');
+
+    waktuPengeluaran = dtFormatMMMMyyyy(waktuPengeluaran);
+
     cleanPengeluaran();
     List<Map<String, dynamic>> dataPengeluaran = await db.queryAll('', '');
 
-    for (var i = 0; i < dataPengeluaran.length; i++) {
-      var cekRp = cekContainRp(dataPengeluaran[i]['nominal']);
-      var pengeluarannya = int.parse(removedot(cekRp));
+    if (waktuPengeluaran == dtFormatMMMMyyyy(DateTime.now())) {
+      // Kalau waktuPengeluaran (yang dipilih user) == Bulan saat ini, maka ini dijalankan bang
+      for (var i = 0; i < dataPengeluaran.length; i++) {
+        var cekRp = cekContainRp(dataPengeluaran[i]['nominal']);
+        var pengeluarannya = int.parse(removedot(cekRp));
 
-      if (dtFormatMMMM(parsingDateFormat(dataPengeluaran[i]['waktu'])) ==
-          bulanSekarang()) {
-        pengeluaranBulanan = pengeluaranBulanan + pengeluarannya;
+        dtFormatMMMMyyyy(parsingDateFormat(dataPengeluaran[i]['waktu'])) ==
+                bulanTahunSekarang()
+            ? {pengeluaranBulanan = pengeluaranBulanan + pengeluarannya}
+            : {};
+      }
+    } else {
+      // Kalau waktuPengeluaran != Bulan saat ini, maka ini dijalankan bang
+
+      for (var i = 0; i < dataPengeluaran.length; i++) {
+        var cekRp = cekContainRp(dataPengeluaran[i]['nominal']);
+        var pengeluarannya = int.parse(removedot(cekRp));
+
+        dtFormatMMMMyyyy(parsingDateFormat(dataPengeluaran[i]['waktu'])) ==
+                waktuPengeluaran
+            ? {pengeluaranBulanan = pengeluaranBulanan + pengeluarannya}
+            : {};
       }
 
-      totalPengeluaranBulanan = totalPengeluaranBulanan + pengeluarannya;
+      // for (var i = 0; i < dataPengeluaran.length; i++) {
+      //   var cekRp = cekContainRp(dataPengeluaran[i]['nominal']);
+      //   var pengeluarannya = int.parse(removedot(cekRp));
+
+      //   if (dtFormatMMMM(parsingDateFormat(dataPengeluaran[i]['waktu'])) ==
+      //       parsingDateFormat(
+      //           DateFormat('EEEE dd MMMM yyyy').format(waktuPengeluaran))) {
+      //     pengeluaranBulanan = pengeluaranBulanan + pengeluarannya;
+      //   }
+
+      //   // totalPengeluaranBulanan = totalPengeluaranBulanan + pengeluarannya;
+      //   setState(() {
+      //     totalPengeluaranBulananAkhir = pengeluaranBulanan;
+      //   });
+      //   print('ini masuk pilihan $totalPengeluaranBulanan');
+      // }
     }
+
+    // for (var i = 0; i < dataPengeluaran.length; i++) {
+    //   var cekRp = cekContainRp(dataPengeluaran[i]['nominal']);
+    //   var pengeluarannya = int.parse(removedot(cekRp));
+
+    //   if (dtFormatMMMM(parsingDateFormat(dataPengeluaran[i]['waktu'])) ==
+    //       bulanSekarang()) {
+    //     pengeluaranBulanan = pengeluaranBulanan + pengeluarannya;
+    //   }
+
+    //   totalPengeluaranBulanan = totalPengeluaranBulanan + pengeluarannya;
+    // }
 
     setState(() {
       totalPengeluaranBulananAkhir = pengeluaranBulanan;
     });
   }
 
-  Widget containerChart(pengeluarannya) {
+  Widget containerChart(pengeluarannya, waktuPengeluarannya) {
+    waktuPengeluarannya = waktuPengeluarannya ??
+        DateFormat('M').parse(DateTime.now().month.toString());
+    print('ini waktu pengeluarannya $waktuPengeluarannya');
     if (pengeluarannya > 0) {
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -198,14 +237,14 @@ class _DashboardState extends State<Dashboard> {
             height: 220,
             color: Colors.transparent,
             child: Center(
-              child: PieChartTipePengeluaran(),
+              child: PieChartTipePengeluaran(waktuPengeluarannya),
             ),
           ),
-          totalPengeluaranBulanan != 0
+          totalPengeluaranBulananAkhir != 0
               ? Container(
                   color: Colors.transparent,
-                  child: const Center(
-                    child: LineChartPengeluaranPerBulan(),
+                  child: Center(
+                    child: LineChartPengeluaranPerBulan(waktuPengeluarannya),
                   ),
                 )
               : const SizedBox(),
@@ -492,7 +531,7 @@ class _DashboardState extends State<Dashboard> {
                           }
                           return null;
                         },
-                        onTap: () => selectDate(context),
+                        onTap: () => selectDatePendapatan(context),
                         keyboardType: TextInputType.none,
                         controller: waktuPendapatanController,
                         decoration: const InputDecoration(
@@ -640,7 +679,9 @@ class _DashboardState extends State<Dashboard> {
   void refreshPage() {
     setState(() {
       getPendapatan();
-      getPengeluaran();
+      getPengeluaran(selectedMonthPengeluaran
+          // dtFormatMMMMyyyy(DateTime.now()),
+          );
     });
   }
 
@@ -675,7 +716,11 @@ class _DashboardState extends State<Dashboard> {
                             Row(
                               children: [
                                 IconButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      selectMonth(context).then((value) {
+                                        print('ini valuenya $value');
+                                      });
+                                    },
                                     icon: Icon(
                                       Icons.edit_calendar_rounded,
                                       color: Colors.white,
@@ -690,7 +735,7 @@ class _DashboardState extends State<Dashboard> {
                                     Row(
                                       children: [
                                         Text(
-                                          '${(DateFormat('MMMM yyyy').format(DateTime.now()))}',
+                                          '${dtFormatMMMMyyyy(selectedMonthPengeluaran!)}',
                                           style: TextStyle(
                                               color: Colors.amber,
                                               fontSize: 16,
@@ -698,7 +743,6 @@ class _DashboardState extends State<Dashboard> {
                                         ),
                                       ],
                                     ),
-                                    // SizedBox(width: defaultPadding / 2),
                                   ],
                                 ),
                               ],
@@ -755,24 +799,6 @@ class _DashboardState extends State<Dashboard> {
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 TextButton.icon(
-                                                    onPressed: () {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              const Dashboard(),
-                                                        ),
-                                                      );
-                                                    },
-                                                    label: Text(
-                                                      'Beranda',
-                                                      style: TextStyle(
-                                                          color: Colors.white),
-                                                    ),
-                                                    icon: Icon(
-                                                        Icons.home_rounded,
-                                                        color: Colors.white)),
-                                                TextButton.icon(
                                                   onPressed: () {
                                                     Navigator.of(context).pop();
                                                     Navigator.push(
@@ -783,7 +809,6 @@ class _DashboardState extends State<Dashboard> {
                                                       ),
                                                     ).then(
                                                       (_) {
-                                                        getPengeluaran();
                                                         refreshPage();
                                                       },
                                                     );
@@ -948,7 +973,11 @@ class _DashboardState extends State<Dashboard> {
                                                 ),
                                               ).then(
                                                 (value) {
-                                                  getPengeluaran();
+                                                  getPengeluaran(
+                                                    selectedMonthPengeluaran ??
+                                                        dtFormatMMMMyyyy(
+                                                            DateTime.now()),
+                                                  );
                                                   refreshPage();
                                                 },
                                               );
@@ -1006,7 +1035,8 @@ class _DashboardState extends State<Dashboard> {
                     color: Colors.green[900],
                   ),
                 ),
-                containerChart(totalPengeluaranBulanan),
+                containerChart(
+                    totalPengeluaranBulananAkhir, selectedMonthPengeluaran),
               ],
             ),
           ),

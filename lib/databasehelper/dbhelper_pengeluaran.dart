@@ -127,8 +127,8 @@ class DatabaseHelper {
     );
   }
 
-  Future<List<Map<String, dynamic>>> queryPieChartByType(waktu) async {
-    DateTime bulan = DateTime(1, waktu, 1);
+  Future<List<Map<String, dynamic>>> queryPieChartByType(DateTime waktu) async {
+    DateTime bulan = DateTime(1, waktu.month, 1);
     String bulannya = DateFormat('MMMM').format(bulan);
 
     final db = await DatabaseHelper.instance.database;
