@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -81,6 +82,26 @@ class DatabaseHelperPendapatan {
         columnWaktu,
       ],
       orderBy: '$columnId DESC',
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> queryAllBulanan(DateTime waktu) async {
+    DateTime bulan = DateTime(1, waktu.month, 1);
+    String bulannya = DateFormat('MMMM').format(bulan);
+
+    Database db = await instance.database;
+
+    return await db.query(
+      table,
+      columns: [
+        columnId,
+        columnPendapatan,
+        columnNominal,
+        columnWaktu,
+      ],
+      orderBy: '$columnId DESC',
+      where: '$columnWaktu LIKE ?',
+      whereArgs: ['%$bulannya%'],
     );
   }
 

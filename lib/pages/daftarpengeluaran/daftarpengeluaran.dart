@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:pengeluaran/charts/lineChart_PengeluaranPerBulan.dart';
 import 'package:pengeluaran/function/functions.dart';
 import 'package:pengeluaran/static/static.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pengeluaran.dart';
@@ -10,11 +11,14 @@ import 'package:pengeluaran/widgets/mywidget.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const Daftarpengeluaran());
+  runApp(Daftarpengeluaran(waktuPengeluarannya: DateTime.now()));
+  // runApp(const Daftarpengeluaran(waktu));
 }
 
 class Daftarpengeluaran extends StatefulWidget {
-  const Daftarpengeluaran({super.key});
+  // const Daftarpengeluaran({super.key});
+  DateTime? waktuPengeluarannya;
+  Daftarpengeluaran({required this.waktuPengeluarannya});
 
   @override
   State<Daftarpengeluaran> createState() => _daftarPengeluaranState();
@@ -131,6 +135,13 @@ class _daftarPengeluaranState extends State<Daftarpengeluaran> {
     final sort = sortnya ?? '';
     List<Map<String, dynamic>> dataPengeluaran = await db.queryAll(tipe, sort);
 
+    // if (widget.waktuPengeluarannya != null) {
+    //   dataPengeluaran = await db.queryAll(tipe, sort);
+
+    // } else {
+    //   dataPengeluaran = await db.queryAll(tipe, sort);
+    // }
+
     totalPengeluaran = 0;
     pengeluaranBulanan = 0;
 
@@ -151,14 +162,19 @@ class _daftarPengeluaranState extends State<Daftarpengeluaran> {
 
       // ini untuk ubah datanya berdasarkan bulan
       // bulanPilihan = DateFormat('MMMM').format(DateTime(2024, 8));
+      bulanPilihan = DateFormat('MMMM').format(widget.waktuPengeluarannya!);
 
-      if (waktuPengeluarannya ==
-          (bulanPilihan == '' ? bulanIni : bulanPilihan)) {
-        pengeluaranBulanan = pengeluaranBulanan + pengeluarannya;
+      if (waktuPengeluarannya == bulanPilihan) {
         _daftarPengeluaranBulanan.add(dataPengeluaran[i]);
-      } else {
-        pengeluaranBulanan = pengeluaranBulanan;
       }
+
+      // if (waktuPengeluarannya ==
+      //     (bulanPilihan == '' ? bulanIni : bulanPilihan)) {
+      //   pengeluaranBulanan = pengeluaranBulanan + pengeluarannya;
+      //   _daftarPengeluaranBulanan.add(dataPengeluaran[i]);
+      // } else {
+      //   pengeluaranBulanan = pengeluaranBulanan;
+      // }
     }
 
     setState(() {
@@ -196,7 +212,7 @@ class _daftarPengeluaranState extends State<Daftarpengeluaran> {
   }
 
   Future<void> selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePickerCustom(context);
+    final DateTime? picked = await showDatePickerCustom(context, 'Pengeluaran');
 
     if (picked != null && picked != selectedDate) {
       setState(() {
@@ -718,6 +734,7 @@ class _daftarPengeluaranState extends State<Daftarpengeluaran> {
 
   @override
   Widget build(BuildContext context) {
+    print('ini data yang dikirim ${widget.waktuPengeluarannya}');
     return Scaffold(
       backgroundColor: Colors.grey[900],
       body: SafeArea(
@@ -748,7 +765,7 @@ class _daftarPengeluaranState extends State<Daftarpengeluaran> {
                           ),
                           onPressed: () {}),
                       const Text(
-                        'Daftar Pengeluaran',
+                        'Daftar Pengeluaran ',
                         style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -819,7 +836,7 @@ class _daftarPengeluaranState extends State<Daftarpengeluaran> {
                       ),
                       Text(
                         DateFormat('MMMM yyyy')
-                            .format(DateTime.now().toLocal()),
+                            .format(widget.waktuPengeluarannya!),
                         style: const TextStyle(
                           color: Colors.amber,
                           fontSize: defaultPadding,
@@ -942,8 +959,6 @@ class _daftarPengeluaranState extends State<Daftarpengeluaran> {
                         itemBuilder: (context, index) {
                           var nominalSaja = cekContainRp(
                               _daftarPengeluaran[index]['nominal']);
-                          print(
-                              'ini isinya ${imageCardPengeluaran(_daftarPengeluaran[index]['tipe'])}');
                           return Container(
                             decoration: BoxDecoration(
                                 image: DecorationImage(

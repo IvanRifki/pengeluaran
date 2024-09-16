@@ -105,15 +105,18 @@ showMonthPickerCustom(context) {
       hideHeaderRow: true);
 }
 
-showDatePickerCustom(context) {
-  showDatePicker(
+Future<DateTime?> showDatePickerCustom(
+    BuildContext context, String tipe) async {
+  DateTime? selectedDate = await showDatePicker(
     context: context,
     initialDate: DateTime.now(),
     firstDate: DateTime(2015, 8),
     lastDate: DateTime(2101),
     cancelText: 'Batal',
     confirmText: 'Pilih',
-    helpText: 'Pilih tanggal pengeluaran.',
+    helpText: tipe == 'Pengeluaran'
+        ? 'Pilih Tanggal Pengeluaran.'
+        : 'Pilih Tanggal Pendapatan',
     fieldLabelText: 'Pilih Tanggal',
     fieldHintText: 'Pilih Tanggal',
     errorFormatText: 'Format Tanggal Tidak Sesuai.',
@@ -137,4 +140,43 @@ showDatePickerCustom(context) {
       );
     },
   );
+
+  return selectedDate; // Nilai tanggal yang dipilih atau null jika dibatalkan
 }
+
+
+// showDatePickerCustom(context, tipe) {
+//   showDatePicker(
+//     context: context,
+//     initialDate: DateTime.now(),
+//     firstDate: DateTime(2015, 8),
+//     lastDate: DateTime(2101),
+//     cancelText: 'Batal',
+//     confirmText: 'Pilih',
+//     helpText: tipe == 'Pengeluaran'
+//         ? 'Pilih Tanggal Pengeluaran.'
+//         : 'Pilih Tanggal Pendapatan',
+//     fieldLabelText: 'Pilih Tanggal',
+//     fieldHintText: 'Pilih Tanggal',
+//     errorFormatText: 'Format Tanggal Tidak Sesuai.',
+//     errorInvalidText: 'Pilih Tanggal Yang Valid.',
+//     builder: (context, child) {
+//       return Theme(
+//         data: Theme.of(context).copyWith(
+//           colorScheme: ColorScheme.light(
+//             primary: Colors.amber,
+//             onPrimary: Colors.black,
+//             onSurface: Colors.grey,
+//             surface: Colors.grey[900]!,
+//           ),
+//           textButtonTheme: TextButtonThemeData(
+//             style: TextButton.styleFrom(
+//               foregroundColor: Colors.grey, // button text color
+//             ),
+//           ),
+//         ),
+//         child: child!,
+//       );
+//     },
+//   );
+// }

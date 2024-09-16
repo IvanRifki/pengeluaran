@@ -1,4 +1,3 @@
-import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_file.dart';
@@ -10,8 +9,6 @@ import 'package:pengeluaran/databasehelper/dbhelper_pengeluaran.dart';
 import 'package:pengeluaran/databasehelper/dbhelper_pendapatan.dart';
 import 'package:pengeluaran/static/static.dart';
 import 'package:pengeluaran/widgets/mywidget.dart';
-// import 'package:month_picker_dialog/month_picker_dialog.dart';
-import 'package:cherry_toast/cherry_toast.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -20,16 +17,20 @@ class Dashboard extends StatefulWidget {
   State<Dashboard> createState() => _DashboardState();
 }
 
+var pendapatanBulanan = 0;
 var pengeluaranBulanan = 0;
 var totalPengeluaranBulanan = 0;
-var totalPengeluaranBulananAkhir = 0;
+int totalPengeluaranBulananAkhir = 0;
+var totalPendapatanBulananAkhir = 0;
 var totalPendapatanBulanan = 0;
 var bulanPengeluaran = dtFormatMMMMyyyy(DateTime.now());
 
 void cleanPengeluaran() {
+  pendapatanBulanan = 0;
   pengeluaranBulanan = 0;
   totalPengeluaranBulanan = 0;
   totalPengeluaranBulananAkhir = 0;
+  totalPendapatanBulananAkhir = 0;
   totalPendapatanBulanan = 0;
 }
 
@@ -44,8 +45,6 @@ final dbPendapatan = DatabaseHelperPendapatan.instance;
 DateTime? selectedDate;
 DateTime? selectedMonthPengeluaran = DateFormat('MMMM yyyy')
     .parse(DateFormat('MMMM yyyy').format(DateTime.now()));
-// DateTime(DateTime.now().year, DateTime.now().month);
-// parsingDateFormatMY(bulanTahunSekarang());
 
 List<Map<String, dynamic>> _daftarpendapatan = [];
 
@@ -58,14 +57,10 @@ final _formKey = GlobalKey<FormState>();
 class _DashboardState extends State<Dashboard> {
   @override
   void initState() {
-    setState(() {
-      cleanPengeluaran();
-      getPengeluaran(
-        // selectedMonthPengeluaran ?? dtFormatMMMMyyyy(DateTime.now()),
-        selectedMonthPengeluaran,
-      );
-      getPendapatan();
-    });
+    getPengeluaran(
+      selectedMonthPengeluaran,
+    );
+    getPendapatan(selectedMonthPengeluaran);
     super.initState();
   }
 
@@ -84,9 +79,31 @@ class _DashboardState extends State<Dashboard> {
     name: 'IDR',
   );
 
-  Future<void> getPendapatan() async {
-    totalPendapatanBulanan = 0;
-    List<Map<String, dynamic>> dataPendapatan = await dbPendapatan.queryAll();
+  Future<void> getPendapatan(waktuPendapatan) async {
+    List<Map<String, dynamic>> dataPendapatan =
+        await dbPendapatan.queryAllBulanan(waktuPendapatan);
+
+    // cleanPengeluaran();
+
+    waktuPendapatan =
+        (dtFormatMMMMyyyy(waktuPendapatan) ?? dtFormatMMMMyyyy(DateTime.now()));
+
+    // List<Map<String, dynamic>> dataPendapatan = await dbPendapatan.queryAll();
+
+    for (var i = 0; i < dataPendapatan.length; i++) {
+      var cekRp = cekContainRp(dataPendapatan[i]['nominal']);
+      var pendapatannya = int.parse(removedot(cekRp));
+
+      dtFormatMMMMyyyy(parsingDateFormat(dataPendapatan[i]['waktu'])) ==
+              waktuPendapatan
+          ? {pendapatanBulanan = pendapatanBulanan + pendapatannya}
+          : {};
+    }
+
+    setState(() {
+      totalPendapatanBulananAkhir = pendapatanBulanan;
+    });
+
     _daftarpendapatan = dataPendapatan;
     if (dataPendapatan.isEmpty) {
       totalPendapatanBulanan = 0;
@@ -111,6 +128,45 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 
+  Future<void> getPengeluaran(waktuPengeluaran) async {
+    waktuPengeluaran = (dtFormatMMMMyyyy(waktuPengeluaran) ??
+        dtFormatMMMMyyyy(DateTime.now()));
+
+    // cleanPengeluaran();
+    List<Map<String, dynamic>> dataPengeluaran = await db.queryAll('', '');
+
+    if (waktuPengeluaran == dtFormatMMMMyyyy(DateTime.now())) {
+      // Kalau waktuPengeluaran (yang dipilih user) == Bulan saat ini, maka ini dijalankan bang
+      for (var i = 0; i < dataPengeluaran.length; i++) {
+        var cekRp = cekContainRp(dataPengeluaran[i]['nominal']);
+        var pengeluarannya = int.parse(removedot(cekRp));
+
+        dtFormatMMMMyyyy(parsingDateFormat(dataPengeluaran[i]['waktu'])) ==
+                bulanTahunSekarang()
+            ? {pengeluaranBulanan = pengeluaranBulanan + pengeluarannya}
+            : {};
+      }
+      setState(() {
+        totalPengeluaranBulananAkhir = pengeluaranBulanan;
+      });
+    } else {
+      // Kalau waktuPengeluaran != Bulan saat ini, maka ini dijalankan bang
+
+      for (var i = 0; i < dataPengeluaran.length; i++) {
+        var cekRp = cekContainRp(dataPengeluaran[i]['nominal']);
+        var pengeluarannya = int.parse(removedot(cekRp));
+
+        dtFormatMMMMyyyy(parsingDateFormat(dataPengeluaran[i]['waktu'])) ==
+                waktuPengeluaran
+            ? {pengeluaranBulanan = pengeluaranBulanan + pengeluarannya}
+            : {};
+      }
+      setState(() {
+        totalPengeluaranBulananAkhir = pengeluaranBulanan;
+      });
+    }
+  }
+
   Future selectMonth(BuildContext context) async {
     final DateTime? picked = await showMonthPickerCustom(context);
     if (picked != null && picked != selectedDate) {
@@ -121,15 +177,13 @@ class _DashboardState extends State<Dashboard> {
           refreshPage();
         },
       );
-      // print(
-      //     'ini bulannya ${DateFormat('MMMM yyyy').format(selectedMonthPengeluaran!)}');
 
       return DateFormat('MMMM yyyy').format(selectedMonthPengeluaran!);
     }
   }
 
-  Future<void> selectDatePendapatan(BuildContext context) async {
-    final DateTime? picked = await showDatePickerCustom(context);
+  Future selectDatePendapatan(BuildContext context) async {
+    final DateTime? picked = await showDatePickerCustom(context, 'Pendapatan');
     if (picked != null && picked != selectedDate) {
       setState(() {
         waktuPendapatanController.text =
@@ -154,82 +208,17 @@ class _DashboardState extends State<Dashboard> {
       print('ada error ini bang $e');
     }
     setState(() {
-      getPendapatan();
+      getPendapatan(selectedMonthPengeluaran);
     });
   }
 
-  Future<void> getPengeluaran(waktuPengeluaran) async {
-    print('ini di getpengeluaran ${dtFormatMMMMyyyy(waktuPengeluaran)}');
+  Widget containerChart(
+      double? totalPengeluaranBulananAkhir, DateTime? waktuPengeluarannya) {
+    // Gunakan bulan saat ini jika waktuPengeluarannya null
+    waktuPengeluarannya ??= DateTime.now();
 
-    waktuPengeluaran = dtFormatMMMMyyyy(waktuPengeluaran);
-
-    cleanPengeluaran();
-    List<Map<String, dynamic>> dataPengeluaran = await db.queryAll('', '');
-
-    if (waktuPengeluaran == dtFormatMMMMyyyy(DateTime.now())) {
-      // Kalau waktuPengeluaran (yang dipilih user) == Bulan saat ini, maka ini dijalankan bang
-      for (var i = 0; i < dataPengeluaran.length; i++) {
-        var cekRp = cekContainRp(dataPengeluaran[i]['nominal']);
-        var pengeluarannya = int.parse(removedot(cekRp));
-
-        dtFormatMMMMyyyy(parsingDateFormat(dataPengeluaran[i]['waktu'])) ==
-                bulanTahunSekarang()
-            ? {pengeluaranBulanan = pengeluaranBulanan + pengeluarannya}
-            : {};
-      }
-    } else {
-      // Kalau waktuPengeluaran != Bulan saat ini, maka ini dijalankan bang
-
-      for (var i = 0; i < dataPengeluaran.length; i++) {
-        var cekRp = cekContainRp(dataPengeluaran[i]['nominal']);
-        var pengeluarannya = int.parse(removedot(cekRp));
-
-        dtFormatMMMMyyyy(parsingDateFormat(dataPengeluaran[i]['waktu'])) ==
-                waktuPengeluaran
-            ? {pengeluaranBulanan = pengeluaranBulanan + pengeluarannya}
-            : {};
-      }
-
-      // for (var i = 0; i < dataPengeluaran.length; i++) {
-      //   var cekRp = cekContainRp(dataPengeluaran[i]['nominal']);
-      //   var pengeluarannya = int.parse(removedot(cekRp));
-
-      //   if (dtFormatMMMM(parsingDateFormat(dataPengeluaran[i]['waktu'])) ==
-      //       parsingDateFormat(
-      //           DateFormat('EEEE dd MMMM yyyy').format(waktuPengeluaran))) {
-      //     pengeluaranBulanan = pengeluaranBulanan + pengeluarannya;
-      //   }
-
-      //   // totalPengeluaranBulanan = totalPengeluaranBulanan + pengeluarannya;
-      //   setState(() {
-      //     totalPengeluaranBulananAkhir = pengeluaranBulanan;
-      //   });
-      //   print('ini masuk pilihan $totalPengeluaranBulanan');
-      // }
-    }
-
-    // for (var i = 0; i < dataPengeluaran.length; i++) {
-    //   var cekRp = cekContainRp(dataPengeluaran[i]['nominal']);
-    //   var pengeluarannya = int.parse(removedot(cekRp));
-
-    //   if (dtFormatMMMM(parsingDateFormat(dataPengeluaran[i]['waktu'])) ==
-    //       bulanSekarang()) {
-    //     pengeluaranBulanan = pengeluaranBulanan + pengeluarannya;
-    //   }
-
-    //   totalPengeluaranBulanan = totalPengeluaranBulanan + pengeluarannya;
-    // }
-
-    setState(() {
-      totalPengeluaranBulananAkhir = pengeluaranBulanan;
-    });
-  }
-
-  Widget containerChart(pengeluarannya, waktuPengeluarannya) {
-    waktuPengeluarannya = waktuPengeluarannya ??
-        DateFormat('M').parse(DateTime.now().month.toString());
-    print('ini waktu pengeluarannya $waktuPengeluarannya');
-    if (pengeluarannya > 0) {
+    if (totalPengeluaranBulananAkhir != null &&
+        totalPengeluaranBulananAkhir > 0) {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -272,6 +261,54 @@ class _DashboardState extends State<Dashboard> {
       );
     }
   }
+
+  // Widget containerChart(totalPengeluaranBulananAkhir, waktuPengeluarannya) {
+  //   waktuPengeluarannya = waktuPengeluarannya ??
+  //       DateFormat('M').parse(DateTime.now().month.toString());
+
+  //   if (totalPengeluaranBulananAkhir > 0) {
+  //     return Column(
+  //       mainAxisSize: MainAxisSize.min,
+  //       children: [
+  //         Container(
+  //           height: 220,
+  //           color: Colors.transparent,
+  //           child: Center(
+  //             child: PieChartTipePengeluaran(waktuPengeluarannya),
+  //           ),
+  //         ),
+  //         totalPengeluaranBulananAkhir != 0
+  //             ? Container(
+  //                 color: Colors.transparent,
+  //                 child: Center(
+  //                   child: LineChartPengeluaranPerBulan(waktuPengeluarannya),
+  //                 ),
+  //               )
+  //             : const SizedBox(),
+  //       ],
+  //     );
+  //   } else {
+  //     return Center(
+  //       child: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           SizedBox(
+  //             height: defaultPadding * 5,
+  //           ),
+  //           Icon(
+  //             Icons.thumb_up_alt_rounded,
+  //             size: 100,
+  //             color: Colors.grey[850],
+  //           ),
+  //           Text(
+  //             'Belum ada data pengeluaran',
+  //             style: TextStyle(color: Colors.grey),
+  //           ),
+  //         ],
+  //       ),
+  //     );
+  //   }
+  // }
 
   showAndCloseDialog(title, content) async {
     showDialog(
@@ -426,7 +463,7 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  void showDialogTambahPendapatan() {
+  showDialogTambahPendapatan() {
     nominalPendapatanController.clear();
     namaPendapatanController.clear();
     waktuPendapatanController.clear();
@@ -524,14 +561,20 @@ class _DashboardState extends State<Dashboard> {
                             }
                           }),
                       TextFormField(
-                        style: TextStyle(color: Colors.amber),
+                        style: const TextStyle(color: Colors.amber),
                         validator: (valueWaktu) {
                           if (valueWaktu!.isEmpty) {
                             return 'Waktu Tidak Boleh Kosong';
                           }
                           return null;
                         },
-                        onTap: () => selectDatePendapatan(context),
+                        onTap: () async {
+                          final value = await selectDatePendapatan(context);
+
+                          if (value != null) {}
+                        },
+                        // onTap: () =>
+                        //     selectDatePendapatan(context),
                         keyboardType: TextInputType.none,
                         controller: waktuPendapatanController,
                         decoration: const InputDecoration(
@@ -654,7 +697,7 @@ class _DashboardState extends State<Dashboard> {
                       onPressed: () async {
                         Navigator.of(context).pop();
                         await dbPendapatan.delete(idnya);
-                        getPendapatan();
+                        getPendapatan(selectedMonthPengeluaran);
                         Navigator.of(context).pop();
                         showAndCloseDialog(
                             'Berhasil', 'Pendapatan Berhasil Terhapus!');
@@ -677,16 +720,25 @@ class _DashboardState extends State<Dashboard> {
   }
 
   void refreshPage() {
-    setState(() {
-      getPendapatan();
-      getPengeluaran(selectedMonthPengeluaran
-          // dtFormatMMMMyyyy(DateTime.now()),
-          );
-    });
+    cleanPengeluaran();
+    getPendapatan(selectedMonthPengeluaran);
+    getPengeluaran(selectedMonthPengeluaran);
   }
 
   @override
   Widget build(BuildContext context) {
+    int sisaPendapatan =
+        totalPendapatanBulananAkhir - totalPengeluaranBulananAkhir;
+
+    Color sisaPendapatanColor;
+    if (sisaPendapatan < 0) {
+      sisaPendapatanColor = Colors.red;
+    } else if (sisaPendapatan > (totalPendapatanBulananAkhir / 2)) {
+      sisaPendapatanColor = Colors.green;
+    } else {
+      sisaPendapatanColor = Colors.amber[800]!;
+    }
+
     return PopScope(
       canPop: false,
       child: SafeArea(
@@ -700,343 +752,422 @@ class _DashboardState extends State<Dashboard> {
                   height: defaultPadding,
                 ),
                 Container(
-                    padding: const EdgeInsets.all(defaultPadding),
-                    width: MediaQuery.of(context).size.width - defaultPadding,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.grey[850],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                IconButton(
-                                    onPressed: () {
-                                      selectMonth(context).then((value) {
-                                        print('ini valuenya $value');
+                  padding: const EdgeInsets.all(defaultPadding),
+                  width: MediaQuery.of(context).size.width - defaultPadding,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.grey[850],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              IconButton(
+                                  onPressed: () {
+                                    selectMonth(context).then((value) {});
+                                  },
+                                  icon: const Icon(
+                                    Icons.edit_calendar_rounded,
+                                    color: Colors.white,
+                                  )),
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Pengeluaran ',
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 12)),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '${dtFormatMMMMyyyy(selectedMonthPengeluaran!)}',
+                                        style: const TextStyle(
+                                            color: Colors.amber,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                  onPressed: () {
+                                    refreshPage();
+                                  },
+                                  icon: const Icon(
+                                    Icons.replay_circle_filled_outlined,
+                                    color: Colors.white,
+                                  )),
+                              IconButton(
+                                onPressed: () {
+                                  showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          contentPadding: const EdgeInsets.all(
+                                              defaultPadding / 2),
+                                          backgroundColor: Colors.grey[900],
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          icon: const Icon(
+                                            Icons.menu_rounded,
+                                            color: Colors.amber,
+                                            size: 50,
+                                          ),
+                                          title: const Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              SizedBox(
+                                                width: defaultPadding / 2,
+                                              ),
+                                              Text(
+                                                'Daftar Menu',
+                                              ),
+                                            ],
+                                          ),
+                                          titleTextStyle: const TextStyle(
+                                            color: Colors.amber,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20,
+                                          ),
+                                          content: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              TextButton.icon(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          Daftarpengeluaran(
+                                                        waktuPengeluarannya:
+                                                            selectedMonthPengeluaran,
+                                                      ),
+                                                    ),
+                                                  ).then(
+                                                    (_) {
+                                                      refreshPage();
+                                                    },
+                                                  );
+                                                },
+                                                label: const Text(
+                                                  'Daftar Pengeluaran',
+                                                  style: TextStyle(
+                                                      color: Colors.white),
+                                                ),
+                                                icon: const Icon(
+                                                    Icons.menu_book_rounded,
+                                                    color: Colors.white),
+                                              ),
+                                              TextButton.icon(
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  label: Text(
+                                                    'Menu Mendatang',
+                                                    style: TextStyle(
+                                                        color:
+                                                            Colors.grey[700]),
+                                                  ),
+                                                  icon: Icon(
+                                                      Icons.commit_rounded,
+                                                      color: Colors.grey[700])),
+                                            ],
+                                          ),
+                                        );
                                       });
-                                    },
-                                    icon: Icon(
-                                      Icons.edit_calendar_rounded,
-                                      color: Colors.white,
-                                    )),
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text('Pengeluaran ',
-                                        style: TextStyle(
-                                            color: Colors.white, fontSize: 12)),
-                                    Row(
+                                },
+                                icon: const Icon(
+                                  Icons.menu,
+                                  size: 32,
+                                  color: Colors.amber,
+                                ),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                      Divider(
+                        color: Colors.grey[800],
+                        thickness: 1,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Pendapatan',
+                                  style: TextStyle(color: Colors.grey)),
+                              Row(
+                                children: [
+                                  totalPendapatanBulananAkhir == 0
+                                      ? Row(
+                                          children: [
+                                            IconButton(
+                                              splashRadius: null,
+                                              icon: const Icon(
+                                                Icons.add_circle,
+                                                color: Colors.amber,
+                                              ),
+                                              onPressed: () {
+                                                showDialogTambahPendapatan();
+                                              },
+                                            ),
+                                            const Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Tambah',
+                                                  style: TextStyle(
+                                                      color: Colors.grey,
+                                                      fontSize: 12),
+                                                ),
+                                                Text(
+                                                  'Pendapatan',
+                                                  style: TextStyle(
+                                                      color: Colors.green,
+                                                      fontSize: 12),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        )
+                                      : Row(
+                                          children: [
+                                            TextButton.icon(
+                                              style: TextButton.styleFrom(
+                                                backgroundColor:
+                                                    Colors.grey[800],
+                                              ),
+                                              onPressed: () {
+                                                showModalBottomSheet(
+                                                    useSafeArea: true,
+                                                    context: context,
+                                                    builder: (context) {
+                                                      return modalBottomPendapatan();
+                                                    });
+                                              },
+                                              label: Text(
+                                                '${totalPendapatanBulananAkhir == 0 ? IconButton(
+                                                    hoverColor: Colors.amber,
+                                                    splashRadius: 20,
+                                                    icon: const Icon(
+                                                      Icons.add_circle,
+                                                      color: Colors.amber,
+                                                    ),
+                                                    onPressed: () {
+                                                      showDialogTambahPendapatan();
+                                                    },
+                                                  ) : currencyFormatter.format(totalPendapatanBulananAkhir)}',
+                                                style: const TextStyle(
+                                                    color: Colors.green,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16),
+                                              ),
+                                              icon: const Icon(
+                                                Icons.arrow_downward,
+                                                color: Colors.green,
+                                                size: 16,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                ],
+                              ),
+                            ],
+                          ),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Pengeluaran ',
+                                  style: TextStyle(color: Colors.grey)),
+                              totalPengeluaranBulananAkhir == 0
+                                  ? Row(
                                       children: [
+                                        IconButton(
+                                          splashRadius: null,
+                                          icon: const Icon(
+                                            Icons.add_circle,
+                                            color: Colors.amber,
+                                          ),
+                                          onPressed: () {
+                                            nominalPendapatanController.clear();
+                                            namaPendapatanController.clear();
+                                            waktuPendapatanController.clear();
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    Daftarpengeluaran(
+                                                        waktuPengeluarannya:
+                                                            selectedMonthPengeluaran),
+                                              ),
+                                            ).then(
+                                              (value) {
+                                                getPengeluaran(
+                                                    selectedMonthPengeluaran);
+                                                getPendapatan(
+                                                    selectedMonthPengeluaran);
+                                                refreshPage();
+                                              },
+                                            );
+                                          },
+                                        ),
+                                        const Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Tambah',
+                                              style: TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 12),
+                                            ),
+                                            Text(
+                                              'Pengeluaran',
+                                              style: TextStyle(
+                                                  color: Colors.red,
+                                                  fontSize: 12),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    )
+                                  : Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.arrow_upward,
+                                          color: Colors.red,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(
+                                          width: defaultPadding / 2,
+                                        ),
                                         Text(
-                                          '${dtFormatMMMMyyyy(selectedMonthPengeluaran!)}',
-                                          style: TextStyle(
-                                              color: Colors.amber,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold),
+                                          currencyFormatter.format(
+                                              totalPengeluaranBulananAkhir),
+                                          style: const TextStyle(
+                                              color: Colors.red,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16),
                                         ),
                                       ],
                                     ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: defaultPadding / 2),
+                      totalPendapatanBulananAkhir == 0
+                          ? Container()
+                          : Container(
+                              padding: const EdgeInsets.only(
+                                  left: defaultPadding,
+                                  right: defaultPadding,
+                                  top: 10,
+                                  bottom: 10),
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: sisaPendapatanColor,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  if (sisaPendapatan < 0) ...[
+                                    Icon(Icons.money_off, color: Colors.white),
+                                  ] else ...[
+                                    Icon(Icons.verified, color: Colors.white),
                                   ],
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                IconButton(
-                                    onPressed: () {
-                                      refreshPage();
-                                    },
-                                    icon: const Icon(
-                                      Icons.replay_circle_filled_outlined,
-                                      color: Colors.white,
-                                    )),
-                                IconButton(
-                                  onPressed: () {
-                                    showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return AlertDialog(
-                                            contentPadding:
-                                                const EdgeInsets.all(
-                                                    defaultPadding / 2),
-                                            backgroundColor: Colors.grey[900],
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                            ),
-                                            icon: const Icon(
-                                              Icons.menu_rounded,
-                                              color: Colors.amber,
-                                              size: 50,
-                                            ),
-                                            title: const Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                SizedBox(
-                                                  width: defaultPadding / 2,
-                                                ),
-                                                Text(
-                                                  'Daftar Menu',
-                                                ),
-                                              ],
-                                            ),
-                                            titleTextStyle: const TextStyle(
-                                              color: Colors.amber,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 20,
-                                            ),
-                                            content: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                TextButton.icon(
-                                                  onPressed: () {
-                                                    Navigator.of(context).pop();
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            const Daftarpengeluaran(),
-                                                      ),
-                                                    ).then(
-                                                      (_) {
-                                                        refreshPage();
-                                                      },
-                                                    );
-                                                  },
-                                                  label: const Text(
-                                                    'Daftar Pengeluaran',
-                                                    style: TextStyle(
-                                                        color: Colors.white),
-                                                  ),
-                                                  icon: const Icon(
-                                                      Icons.menu_book_rounded,
-                                                      color: Colors.white),
-                                                ),
-                                                TextButton.icon(
-                                                    onPressed: () {
-                                                      Navigator.of(context)
-                                                          .pop();
-                                                    },
-                                                    label: Text(
-                                                      'Menu Mendatang',
-                                                      style: TextStyle(
-                                                          color:
-                                                              Colors.grey[700]),
-                                                    ),
-                                                    icon: Icon(
-                                                        Icons.commit_rounded,
-                                                        color:
-                                                            Colors.grey[700])),
-                                              ],
-                                            ),
-                                          );
-                                        });
-                                  },
-                                  icon: const Icon(
-                                    Icons.menu,
-                                    size: 32,
-                                    color: Colors.amber,
-                                  ),
-                                ),
-                              ],
-                            )
-                          ],
-                        ),
-                        Divider(
-                          color: Colors.grey[800],
-                          thickness: 1,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Pendapatan',
-                                    style: TextStyle(color: Colors.grey)),
-                                Row(
-                                  children: [
-                                    totalPendapatanBulanan == 0
-                                        ? Row(
-                                            children: [
-                                              IconButton(
-                                                splashRadius: null,
-                                                icon: const Icon(
-                                                  Icons.add_circle,
-                                                  color: Colors.amber,
-                                                ),
-                                                onPressed: () {
-                                                  showDialogTambahPendapatan();
-                                                },
-                                              ),
-                                              const Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    'Tambah',
-                                                    style: TextStyle(
-                                                        color: Colors.grey,
-                                                        fontSize: 12),
-                                                  ),
-                                                  Text(
-                                                    'Pendapatan',
-                                                    style: TextStyle(
-                                                        color: Colors.green,
-                                                        fontSize: 12),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          )
-                                        : Row(
-                                            children: [
-                                              TextButton.icon(
-                                                style: TextButton.styleFrom(
-                                                  backgroundColor:
-                                                      Colors.grey[800],
-                                                ),
-                                                onPressed: () {
-                                                  showModalBottomSheet(
-                                                      useSafeArea: true,
-                                                      context: context,
-                                                      builder: (context) {
-                                                        return modalBottomPendapatan();
-                                                      });
-                                                },
-                                                label: Text(
-                                                  '${totalPendapatanBulanan == 0 ? IconButton(
-                                                      hoverColor: Colors.amber,
-                                                      splashRadius: 20,
-                                                      icon: const Icon(
-                                                        Icons.add_circle,
-                                                        color: Colors.amber,
-                                                      ),
-                                                      onPressed: () {
-                                                        showDialogTambahPendapatan();
-                                                      },
-                                                    ) : currencyFormatter.format(totalPendapatanBulanan)}',
-                                                  style: const TextStyle(
-                                                      color: Colors.green,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 16),
-                                                ),
-                                                icon: const Icon(
-                                                  Icons.arrow_downward,
-                                                  color: Colors.green,
-                                                  size: 16,
-                                                ),
-                                              ),
-                                            ],
-                                          )
-                                  ],
-                                ),
-                              ],
-                            ),
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Pengeluaran ',
-                                    style: TextStyle(color: Colors.grey)),
-                                totalPengeluaranBulananAkhir == 0
-                                    ? Row(
+                                  const SizedBox(width: defaultPadding / 2),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
                                         children: [
-                                          IconButton(
-                                            splashRadius: null,
-                                            icon: const Icon(
-                                              Icons.add_circle,
-                                              color: Colors.amber,
-                                            ),
-                                            onPressed: () {
-                                              nominalPendapatanController
-                                                  .clear();
-                                              namaPendapatanController.clear();
-                                              waktuPendapatanController.clear();
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const Daftarpengeluaran(),
-                                                ),
-                                              ).then(
-                                                (value) {
-                                                  getPengeluaran(
-                                                    selectedMonthPengeluaran ??
-                                                        dtFormatMMMMyyyy(
-                                                            DateTime.now()),
-                                                  );
-                                                  refreshPage();
-                                                },
-                                              );
-                                            },
-                                          ),
-                                          const Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'Tambah',
-                                                style: TextStyle(
-                                                    color: Colors.grey,
-                                                    fontSize: 12),
-                                              ),
-                                              Text(
-                                                'Pengeluaran',
-                                                style: TextStyle(
-                                                    color: Colors.red,
-                                                    fontSize: 12),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      )
-                                    : Row(
-                                        children: [
-                                          Icon(
-                                            Icons.arrow_upward,
-                                            color: Colors.red,
-                                            size: 16,
-                                          ),
-                                          SizedBox(
-                                            width: defaultPadding / 2,
+                                          Text(
+                                            'Sisa Pendapatan ',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12),
+                                            textAlign: TextAlign.center,
                                           ),
                                           Text(
-                                            '${currencyFormatter.format(totalPengeluaranBulananAkhir)}',
+                                            ' ${currencyFormatter.format(sisaPendapatan)}.',
                                             style: TextStyle(
-                                                color: Colors.red,
+                                                color: Colors.white,
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 16),
+                                            textAlign: TextAlign.center,
                                           ),
                                         ],
                                       ),
-                              ],
+                                      Row(
+                                        children: [
+                                          if (sisaPendapatan < 0) ...[
+                                            Text(
+                                              'Anda boros ',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ] else ...[
+                                            Text(
+                                              'Anda hemat ',
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 12),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                          Text(
+                                            ' ${((sisaPendapatan / totalPendapatanBulananAkhir) * 100).toStringAsFixed(2).replaceAll('-', '')} %',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          Text(
+                                            '  bulan ${DateFormat('MMMM').format(selectedMonthPengeluaran!)} ini.',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 12),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
-                        )
-                      ],
-                    )),
-                Container(
-                  width: MediaQuery.of(context).size.width - defaultPadding * 2,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.green[900],
+                    ],
                   ),
                 ),
-                containerChart(
-                    totalPengeluaranBulananAkhir, selectedMonthPengeluaran),
+                containerChart(totalPengeluaranBulananAkhir.toDouble(),
+                    selectedMonthPengeluaran),
               ],
             ),
           ),
@@ -1045,3 +1176,6 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 }
+
+
+//------------------------------------------------------------------------------
