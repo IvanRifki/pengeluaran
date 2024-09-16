@@ -165,6 +165,7 @@ class _daftarPengeluaranState extends State<Daftarpengeluaran> {
       bulanPilihan = DateFormat('MMMM').format(widget.waktuPengeluarannya!);
 
       if (waktuPengeluarannya == bulanPilihan) {
+        pengeluaranBulanan = pengeluaranBulanan + pengeluarannya;
         _daftarPengeluaranBulanan.add(dataPengeluaran[i]);
       }
 

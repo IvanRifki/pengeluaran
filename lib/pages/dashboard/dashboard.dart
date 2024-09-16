@@ -224,14 +224,31 @@ class _DashboardState extends State<Dashboard> {
         children: [
           Container(
             height: 220,
-            color: Colors.transparent,
+            margin: EdgeInsets.only(
+                top: defaultPadding / 2,
+                left: defaultPadding / 2,
+                right: defaultPadding / 2),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.black38,
+            ),
             child: Center(
               child: PieChartTipePengeluaran(waktuPengeluarannya),
             ),
           ),
           totalPengeluaranBulananAkhir != 0
               ? Container(
-                  color: Colors.transparent,
+                  padding: const EdgeInsets.only(
+                    top: defaultPadding / 2,
+                  ),
+                  margin: EdgeInsets.only(
+                      left: defaultPadding / 2,
+                      right: defaultPadding / 2,
+                      top: defaultPadding / 2),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.black38,
+                  ),
                   child: Center(
                     child: LineChartPengeluaranPerBulan(waktuPengeluarannya),
                   ),
@@ -261,54 +278,6 @@ class _DashboardState extends State<Dashboard> {
       );
     }
   }
-
-  // Widget containerChart(totalPengeluaranBulananAkhir, waktuPengeluarannya) {
-  //   waktuPengeluarannya = waktuPengeluarannya ??
-  //       DateFormat('M').parse(DateTime.now().month.toString());
-
-  //   if (totalPengeluaranBulananAkhir > 0) {
-  //     return Column(
-  //       mainAxisSize: MainAxisSize.min,
-  //       children: [
-  //         Container(
-  //           height: 220,
-  //           color: Colors.transparent,
-  //           child: Center(
-  //             child: PieChartTipePengeluaran(waktuPengeluarannya),
-  //           ),
-  //         ),
-  //         totalPengeluaranBulananAkhir != 0
-  //             ? Container(
-  //                 color: Colors.transparent,
-  //                 child: Center(
-  //                   child: LineChartPengeluaranPerBulan(waktuPengeluarannya),
-  //                 ),
-  //               )
-  //             : const SizedBox(),
-  //       ],
-  //     );
-  //   } else {
-  //     return Center(
-  //       child: Column(
-  //         mainAxisSize: MainAxisSize.min,
-  //         children: [
-  //           SizedBox(
-  //             height: defaultPadding * 5,
-  //           ),
-  //           Icon(
-  //             Icons.thumb_up_alt_rounded,
-  //             size: 100,
-  //             color: Colors.grey[850],
-  //           ),
-  //           Text(
-  //             'Belum ada data pengeluaran',
-  //             style: TextStyle(color: Colors.grey),
-  //           ),
-  //         ],
-  //       ),
-  //     );
-  //   }
-  // }
 
   showAndCloseDialog(title, content) async {
     showDialog(
@@ -756,7 +725,7 @@ class _DashboardState extends State<Dashboard> {
                   width: MediaQuery.of(context).size.width - defaultPadding,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
-                    color: Colors.grey[850],
+                    color: Colors.black38,
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1023,10 +992,6 @@ class _DashboardState extends State<Dashboard> {
                                               ),
                                             ).then(
                                               (value) {
-                                                getPengeluaran(
-                                                    selectedMonthPengeluaran);
-                                                getPendapatan(
-                                                    selectedMonthPengeluaran);
                                                 refreshPage();
                                               },
                                             );
@@ -1080,11 +1045,8 @@ class _DashboardState extends State<Dashboard> {
                       totalPendapatanBulananAkhir == 0
                           ? Container()
                           : Container(
-                              padding: const EdgeInsets.only(
-                                  left: defaultPadding,
-                                  right: defaultPadding,
-                                  top: 10,
-                                  bottom: 10),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: defaultPadding, vertical: 10),
                               width: double.infinity,
                               decoration: BoxDecoration(
                                 color: sisaPendapatanColor,
@@ -1093,11 +1055,12 @@ class _DashboardState extends State<Dashboard> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  if (sisaPendapatan < 0) ...[
-                                    Icon(Icons.money_off, color: Colors.white),
-                                  ] else ...[
-                                    Icon(Icons.verified, color: Colors.white),
-                                  ],
+                                  Icon(
+                                    sisaPendapatan < 0
+                                        ? Icons.money_off
+                                        : Icons.verified,
+                                    color: Colors.white,
+                                  ),
                                   const SizedBox(width: defaultPadding / 2),
                                   Column(
                                     crossAxisAlignment:
@@ -1105,7 +1068,7 @@ class _DashboardState extends State<Dashboard> {
                                     children: [
                                       Row(
                                         children: [
-                                          Text(
+                                          const Text(
                                             'Sisa Pendapatan ',
                                             style: TextStyle(
                                                 color: Colors.white,
@@ -1114,44 +1077,39 @@ class _DashboardState extends State<Dashboard> {
                                           ),
                                           Text(
                                             ' ${currencyFormatter.format(sisaPendapatan)}.',
-                                            style: TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
                                             textAlign: TextAlign.center,
                                           ),
                                         ],
                                       ),
                                       Row(
                                         children: [
-                                          if (sisaPendapatan < 0) ...[
-                                            Text(
-                                              'Anda boros ',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                              ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ] else ...[
-                                            Text(
-                                              'Anda hemat ',
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ],
                                           Text(
-                                            ' ${((sisaPendapatan / totalPendapatanBulananAkhir) * 100).toStringAsFixed(2).replaceAll('-', '')} %',
-                                            style: TextStyle(
+                                            sisaPendapatan < 0
+                                                ? 'Anda boros '
+                                                : 'Anda hemat ',
+                                            style: const TextStyle(
                                                 color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16),
+                                                fontSize: 12),
                                             textAlign: TextAlign.center,
                                           ),
                                           Text(
-                                            '  bulan ${DateFormat('MMMM').format(selectedMonthPengeluaran!)} ini.',
+                                            ' ${((sisaPendapatan / totalPendapatanBulananAkhir) * 100).toStringAsFixed(2).replaceAll('-', '')} %',
                                             style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          Text(
+                                            ' bulan ${DateFormat('MMMM').format(selectedMonthPengeluaran!)} ini.',
+                                            overflow: TextOverflow.visible,
+                                            style: const TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 12),
                                             textAlign: TextAlign.center,
@@ -1162,7 +1120,92 @@ class _DashboardState extends State<Dashboard> {
                                   ),
                                 ],
                               ),
-                            ),
+                            )
+
+                      // Container(
+                      //     padding: const EdgeInsets.only(
+                      //         left: defaultPadding,
+                      //         right: defaultPadding,
+                      //         top: 10,
+                      //         bottom: 10),
+                      //     width: double.infinity,
+                      //     decoration: BoxDecoration(
+                      //       color: sisaPendapatanColor,
+                      //       borderRadius: BorderRadius.circular(10),
+                      //     ),
+                      //     child: Row(
+                      //       mainAxisAlignment: MainAxisAlignment.start,
+                      //       children: [
+                      //         if (sisaPendapatan < 0) ...[
+                      //           Icon(Icons.money_off, color: Colors.white),
+                      //         ] else ...[
+                      //           Icon(Icons.verified, color: Colors.white),
+                      //         ],
+                      //         const SizedBox(width: defaultPadding / 2),
+                      //         Column(
+                      //           crossAxisAlignment:
+                      //               CrossAxisAlignment.start,
+                      //           children: [
+                      //             Row(
+                      //               children: [
+                      //                 Text(
+                      //                   'Sisa Pendapatan ',
+                      //                   style: TextStyle(
+                      //                       color: Colors.white,
+                      //                       fontSize: 12),
+                      //                   textAlign: TextAlign.center,
+                      //                 ),
+                      //                 Text(
+                      //                   ' ${currencyFormatter.format(sisaPendapatan)}.',
+                      //                   style: TextStyle(
+                      //                       color: Colors.white,
+                      //                       fontWeight: FontWeight.bold,
+                      //                       fontSize: 16),
+                      //                   textAlign: TextAlign.center,
+                      //                 ),
+                      //               ],
+                      //             ),
+                      //             Row(
+                      //               children: [
+                      //                 if (sisaPendapatan < 0) ...[
+                      //                   Text(
+                      //                     'Anda boros ',
+                      //                     style: TextStyle(
+                      //                       color: Colors.white,
+                      //                     ),
+                      //                     textAlign: TextAlign.center,
+                      //                   ),
+                      //                 ] else ...[
+                      //                   Text(
+                      //                     'Anda hemat ',
+                      //                     style: TextStyle(
+                      //                         color: Colors.white,
+                      //                         fontSize: 12),
+                      //                     textAlign: TextAlign.center,
+                      //                   ),
+                      //                 ],
+                      //                 Text(
+                      //                   ' ${((sisaPendapatan / totalPendapatanBulananAkhir) * 100).toStringAsFixed(2).replaceAll('-', '')} %',
+                      //                   style: TextStyle(
+                      //                       color: Colors.white,
+                      //                       fontWeight: FontWeight.bold,
+                      //                       fontSize: 16),
+                      //                   textAlign: TextAlign.center,
+                      //                 ),
+                      //                 Text(
+                      //                   '  bulan ${DateFormat('MMMM').format(selectedMonthPengeluaran!)} ini.',
+                      //                   style: TextStyle(
+                      //                       color: Colors.white,
+                      //                       fontSize: 12),
+                      //                   textAlign: TextAlign.center,
+                      //                 ),
+                      //               ],
+                      //             ),
+                      //           ],
+                      //         ),
+                      //       ],
+                      //     ),
+                      //   ),
                     ],
                   ),
                 ),
